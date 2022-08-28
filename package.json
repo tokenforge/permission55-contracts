@@ -1,5 +1,5 @@
 {
-  "name": "self-contracts",
+  "name": "credistry-contracts",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -19,7 +19,8 @@
     "deploy-matic": "yarn deploy matic",
     "deploy-fuji": "yarn deploy fuji",
     "deploy-all": "yarn deploy-rinkeby && yarn deploy-mumbai && yarn deploy-fuji",
-    "slither": "slither . --ignore-compile --filter-paths \"node_modules\" --disable-color --print human-summary",
+    "slither-human": "slither . --filter-paths \"node_modules\" --disable-color --print human-summary 2>&1 | fgrep -v 'mixedCase'      ",
+    "slither": "slither . --filter-paths \"node_modules\"  2>&1 | fgrep -v 'mixedCase'| fgrep -v 'CapWords'      ",
     "verify-rinkeby": "hardhat --network rinkeby etherscan-verify --api-key ZW5EVBSB7EJMNGTD4NHARNDUPTE54CRA1M",
     "verify-mumbai": "hardhat --network mumbai etherscan-verify --api-key 7PFAPZM322EUWWBPD6CI5BXQX9AEB8U8CK",
     "verify-matic": "hardhat --network matic etherscan-verify --api-key 7PFAPZM322EUWWBPD6CI5BXQX9AEB8U8CK",

@@ -9,8 +9,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const permissions = await deployments.get('Permissions55');
     console.log("Using Permissions55: " + permissions.address);
-    
-    return;
+
+    const factoryV2 = await deployments.get('SPVFactoryV2');
+    console.log("Memorizing SPVFactoryV2: " + factoryV2.address);
 
     const instance = await deploy('SPVFactoryV3', {
         from: deployer,

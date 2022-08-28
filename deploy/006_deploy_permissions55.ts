@@ -11,8 +11,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     
     return;
     
-    console.log("Deployer: ", deployer)
-    
     const instance = await deploy('Permissions55', {
         from: deployer,
         args: ['https://token-forge.io'],

@@ -2,7 +2,7 @@
 // (C) by TokenForge GmbH, Berlin
 // Author: Hagen Hübel, hagen@token-forge.io
 
-pragma solidity >=0.8.9 <0.9.0;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
