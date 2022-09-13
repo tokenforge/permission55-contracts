@@ -7,6 +7,9 @@
     "mocha-no-only",
     "promise",
   ],
+  "eslint.workingDirectories": [
+    { "mode": "auto" }
+  ],  
   "env": {
     "browser" : true,
     "node"    : true,

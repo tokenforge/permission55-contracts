@@ -6,6 +6,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const {deploy, log} = deployments;
 
     const {deployer} = await getNamedAccounts();
+    
+    return;
 
     const permissions = await deployments.get('Permissions55');
     console.log("Using Permissions55: " + permissions.address);
