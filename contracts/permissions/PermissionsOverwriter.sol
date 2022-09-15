@@ -7,26 +7,22 @@ pragma solidity ^0.8.7;
 import "./PermissionsAware.sol";
 import "../lib/CredistryErrors.sol";
 
-
 contract PermissionsOverwriter is PermissionsAware, CredistryErrors {
     event SetRoleIdOverwritten(uint256 roleId, bool overwrite);
 
     uint256 public constant PERMISSION_ID_DELTA = 1000;
 
-    event PermissionSetIdChanged(
-        uint256 indexed oldPermissionSetId,
-        uint256 indexed newPermissionSetId
-    );
+    event PermissionSetIdChanged(uint256 indexed oldPermissionSetId, uint256 indexed newPermissionSetId);
 
     uint256 private _permissionSetId;
-    
+
     mapping(uint256 => bool) internal _overwrittenRoleIds;
 
     struct OverwriteRoleId {
         uint256 roleId;
         bool overwritten;
     }
-    
+
     constructor(IPermissions55 permissions_, uint256 permissionSetId_) PermissionsAware(permissions_) {
         _permissionSetId = permissionSetId_;
     }
@@ -45,10 +41,10 @@ contract PermissionsOverwriter is PermissionsAware, CredistryErrors {
         _permissionSetId = permissionSetId;
 
         uint256[4] memory roleIds = [
-        TOKEN_ROLE_MINTER,
-        TOKEN_ROLE_WHITELIST_ADMIN,
-        TOKEN_ROLE_TRANSFERER,
-        TOKEN_ROLE_IS_WHITELISTED
+            TOKEN_ROLE_MINTER,
+            TOKEN_ROLE_WHITELIST_ADMIN,
+            TOKEN_ROLE_TRANSFERER,
+            TOKEN_ROLE_IS_WHITELISTED
         ];
 
         for (uint256 i = 0; i < 4; ++i) {
@@ -99,5 +95,4 @@ contract PermissionsOverwriter is PermissionsAware, CredistryErrors {
 
         return false;
     }
-
 }

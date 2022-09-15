@@ -6,5 +6,6 @@ pragma solidity ^0.8.7;
 
 interface IPropertiesAware {
     function getProperty(bytes32 key) external view returns (string memory);
+
     function setProperty(bytes32 key, string memory val_) external;
 }

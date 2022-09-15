@@ -9,7 +9,6 @@ import "../lib/CredistryErrors.sol";
 import "../interfaces/IPropertiesAware.sol";
 
 abstract contract PropertiesAware is PermissionRoles, CredistryErrors, IPropertiesAware {
-
     event PropertyChanged(bytes32 indexed propertyName, bytes oldValue, bytes newValue);
 
     mapping(bytes32 => string) internal _properties;
@@ -29,5 +28,4 @@ abstract contract PropertiesAware is PermissionRoles, CredistryErrors, IProperti
 
         emit PropertyChanged(key, bytes(oldValue), bytes(val_));
     }
-    
 }
