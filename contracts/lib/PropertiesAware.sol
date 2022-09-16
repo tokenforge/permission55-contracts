@@ -13,7 +13,7 @@ abstract contract PropertiesAware is PermissionRoles, CredistryErrors, IProperti
 
     mapping(bytes32 => string) internal _properties;
 
-    function getProperty(bytes32 key) public override view returns (string memory) {
+    function getProperty(bytes32 key) public view override returns (string memory) {
         return _properties[key];
     }
 
