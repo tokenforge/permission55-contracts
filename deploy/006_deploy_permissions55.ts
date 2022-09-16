@@ -7,6 +7,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const {deployer} = await getNamedAccounts();
     
+    console.log("Deployer", deployer)
+    
     // WE use existing instance
     
     const instance = await deploy('Permissions55', {
