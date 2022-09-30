@@ -51,7 +51,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:tokenforge-gmbh/self/self-contracts.git"
+    "url": "git@gitlab.com:tokenforge-gmbh/contracts/credistry-contracts.git"
   },
   "author": "Hagen Hübel <hagen@token-forge.io>",
   "license": "(C) 2022 by TokenForge GmbH",
