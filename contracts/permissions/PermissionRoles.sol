@@ -18,7 +18,6 @@ abstract contract PermissionRoles is Context {
     uint256 public constant TOKEN_ROLE_OPERATOR = 7;
     uint256 public constant TOKEN_ROLE_IS_WHITELISTED = 8;
     uint256 public constant TOKEN_ROLE_IS_BLACKLISTED = 9;
-           
 
     /**
      * @dev Modifier to make a function callable only when a specific role is met
