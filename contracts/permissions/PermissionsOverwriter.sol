@@ -40,10 +40,11 @@ contract PermissionsOverwriter is PermissionsAware, CredistryErrors {
 
         _permissionSetId = permissionSetId;
 
-        uint256[4] memory roleIds = [
+        uint256[5] memory roleIds = [
             TOKEN_ROLE_MINTER,
             TOKEN_ROLE_WHITELIST_ADMIN,
             TOKEN_ROLE_TRANSFERER,
+            TOKEN_ROLE_OPERATOR,
             TOKEN_ROLE_IS_WHITELISTED
         ];
 
