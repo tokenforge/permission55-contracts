@@ -143,13 +143,12 @@ contract Permissions55 is
         uint256 id,
         string memory tokenUri
     ) public onlyMintingRole(id) {
-        if(!exists(id)) {
+        if (!exists(id)) {
             _create(to, id, tokenUri);
         } else {
             _mint(to, id);
         }
     }
-    
 
     function ownersOf(uint256 tokenId) external view returns (address[] memory) {
         return _tokenMembers[tokenId].content();
