@@ -1,14 +1,11 @@
 import {config as dotEnvConfig} from 'dotenv';
+import "@nomicfoundation/hardhat-toolbox";
 import 'hardhat-deploy';
 import 'hardhat-deploy-tenderly';
 
 dotEnvConfig();
 
 import {HardhatUserConfig} from 'hardhat/types';
-
-import '@nomiclabs/hardhat-waffle';
-import '@typechain/hardhat';
-import '@nomiclabs/hardhat-etherscan';
 
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
@@ -87,6 +84,20 @@ const config: HardhatUserConfig = {
         goerli: {
             url: node_url('goerli'),
             accounts: accounts('goerli'),
+            gas: 2100000,
+            gasPrice: 8000000000
+        },
+        arbitrum_goerli: {
+            url: node_url('ARBITRUM_GOERLI'),
+            accounts: accounts('goerli'),
+            gas: 2100000,
+            gasPrice: 8000000000
+        },
+        optimism_goerli: {
+            url: node_url('OPTIMISM_GOERLI'),
+            accounts: accounts('goerli'),
+            gas: 2100000,
+            gasPrice: 8000000000
         },
         fuji: {
             url: 'https://api.avax-test.network/ext/bc/C/rpc',
@@ -99,7 +110,13 @@ const config: HardhatUserConfig = {
             gasPrice: 225000000000,
             chainId: 43114,
             accounts: accounts('fuji'),
-        }
+        },
+        // Moonbase Alpha network specification (MoonBeam)
+        moonbase: {
+            url: 'https://rpc.api.moonbase.moonbeam.network',
+            chainId: 1287, // 0x507 in hex,
+            accounts: accounts('moonbeam')
+        }        
     }),
     etherscan: {
         // Your API key for Etherscan

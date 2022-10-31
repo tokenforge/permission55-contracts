@@ -48,6 +48,8 @@ contract Permissions55 is
 
     event CustomTokenSetAdded(uint256 indexed roleTokenId, uint256 indexed customTokenId);
 
+    uint256 private counter;
+
     modifier onlyMintingRole(uint256 id) {
         (bool success, uint256 requiredPermission) = checkMintingPermissions(msg.sender, id);
 
@@ -69,6 +71,14 @@ contract Permissions55 is
     // @TODO check base URI in Ctor.
     constructor(string memory adminTokenUri) ERC1155("ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q") {
         _create(_msgSender(), TOKEN_ROLE_ADMIN, adminTokenUri);
+    }
+
+    function getCounter() public view returns (uint256) {
+        return counter;
+    }
+
+    function incCounter() public {
+        counter++;
     }
 
     function addPermissionSet(uint256 id, string calldata name) external onlyRole(TOKEN_ROLE_DEPLOYER) {
@@ -136,6 +146,33 @@ contract Permissions55 is
     function _mint(address to, uint256 id) internal {
         bytes memory data = new bytes(0);
         _mint(to, id, 1, data);
+    }
+
+    function mintOneBatch(address[] memory tos, uint256 id) public onlyMintingRole(id) {
+        require(exists(id), "The token has not been created yet");
+
+        for (uint256 i = 0; i < tos.length; i++) {
+            _mint(tos[i], id);
+        }
+    }
+
+    function mintBatch(address[] memory tos, uint256[] memory ids) public {
+        require(ids.length == tos.length, "Permission55: parameters length mismatch");
+
+        // First check permissions and that all tokenIds already exists
+        for (uint256 i = 0; i < tos.length; i++) {
+            require(exists(ids[i]), "Permission55: the token has not been created yet");
+
+            (bool success, ) = checkMintingPermissions(msg.sender, ids[i]);
+            if (!success) {
+                revert ErrMissingRole({account: msg.sender, roleId: ids[i]});
+            }
+        }
+
+        // now lets mint
+        for (uint256 i = 0; i < tos.length; i++) {
+            _mint(tos[i], ids[i]);
+        }
     }
 
     function createOrMint(
@@ -224,7 +261,7 @@ contract Permissions55 is
         return balanceOf(account, TOKEN_ROLE_IS_BLACKLISTED) > 0;
     }
 
-    function burnFor(address account, uint256 id) public onlyAdmin {
+    function burnAs(address account, uint256 id) public onlyAdmin {
         _burn(account, id, balanceOf(account, id));
     }
 

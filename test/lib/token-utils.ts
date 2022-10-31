@@ -9,7 +9,7 @@ export async function getTokenIdFromTransaction(transaction: Promise<ContractTra
         return tokenId;
     }
     
-    return getTokenIdFromIssuedEvent(receipt);
+    return getTokenIdFromContractDeployedEvent(receipt);
 }
 
 export function getTokenIdFromTransferEvent(receipt: ContractReceipt): string {
@@ -25,14 +25,14 @@ export function getTokenIdFromTransferEvent(receipt: ContractReceipt): string {
     }
 }
 
-export function getTokenIdFromIssuedEvent(receipt: ContractReceipt): string {
+export function getTokenIdFromContractDeployedEvent(receipt: ContractReceipt): string {
     const events: Event[] | undefined = receipt.events?.filter((x: Event) => {
-        return x.event == 'Issued';
+        return x.event == 'ContractDeployed';
     });
+    
     const args: Result | undefined | any[] = events ? events[0]?.args : [];
-
     if (args !== undefined) {
-        return args[1];
+        return args[0];
     } else {
         return "";
     }

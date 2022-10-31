@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2020",
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
+    "rootDirs": ["./src", "./scripts", "./test"],
     "resolveJsonModule": true
   },
+  "exclude": ["dist", "node_modules"],
   "include": ["./hardhat.config.ts", "./scripts", "./deploy", "./test"],
   "files": [
     "./hardhat.config.ts",
