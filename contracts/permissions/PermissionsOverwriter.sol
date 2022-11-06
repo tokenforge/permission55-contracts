@@ -48,7 +48,7 @@ contract PermissionsOverwriter is PermissionsAware, CredistryErrors {
             TOKEN_ROLE_IS_WHITELISTED
         ];
 
-        for (uint256 i = 0; i < 4; ++i) {
+        for (uint256 i = 0; i < roleIds.length; ++i) {
             if (oldPermissionSetId > 0) {
                 // cleaning up old custom role tokens
                 removeCustomRoleToken(roleIds[i], transformedRoleId(oldPermissionSetId, roleIds[i]));
