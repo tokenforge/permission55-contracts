@@ -46,11 +46,7 @@ library LibMap_uint256_string {
         return _map.keyset.content();
     }
 
-    function set(
-        map storage _map,
-        uint256 _key,
-        string memory _value
-    ) internal returns (bool) {
+    function set(map storage _map, uint256 _key, string memory _value) internal returns (bool) {
         _map.keyset.add(_key);
         _map.values[_key] = _value;
         return true;

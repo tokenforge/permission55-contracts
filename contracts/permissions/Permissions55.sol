@@ -100,13 +100,10 @@ contract Permissions55 is
         emit CustomTokenSetAdded(roleTokenId, customTokenId);
     }
 
-    function balanceOf(address account, uint256 id)
-        public
-        view
-        virtual
-        override(ERC1155, IPermissions55)
-        returns (uint256)
-    {
+    function balanceOf(
+        address account,
+        uint256 id
+    ) public view virtual override(ERC1155, IPermissions55) returns (uint256) {
         return super.balanceOf(account, id);
     }
 
@@ -118,21 +115,13 @@ contract Permissions55 is
         _tokenUris[id] = tokenUri;
     }
 
-    function create(
-        address to,
-        uint256 id,
-        string memory tokenUri
-    ) public onlyMintingRole(id) {
+    function create(address to, uint256 id, string memory tokenUri) public onlyMintingRole(id) {
         require(!exists(id), "The token has already been created yet");
 
         _create(to, id, tokenUri);
     }
 
-    function _create(
-        address to,
-        uint256 id,
-        string memory tokenUri
-    ) internal {
+    function _create(address to, uint256 id, string memory tokenUri) internal {
         _tokenUris[id] = tokenUri;
         _mint(to, id);
     }
@@ -175,11 +164,7 @@ contract Permissions55 is
         }
     }
 
-    function createOrMint(
-        address to,
-        uint256 id,
-        string memory tokenUri
-    ) public onlyMintingRole(id) {
+    function createOrMint(address to, uint256 id, string memory tokenUri) public onlyMintingRole(id) {
         if (!exists(id)) {
             _create(to, id, tokenUri);
         } else {
@@ -203,11 +188,10 @@ contract Permissions55 is
         return _tokenMembers[tokenId].length();
     }
 
-    function checkMintingPermissions(address account, uint256 tokenId)
-        public
-        view
-        returns (bool success, uint256 requiredPermission)
-    {
+    function checkMintingPermissions(
+        address account,
+        uint256 tokenId
+    ) public view returns (bool success, uint256 requiredPermission) {
         if (isAdmin(account)) {
             return (true, 0);
         }
