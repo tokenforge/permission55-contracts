@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const fs = require('fs');
+const fs = require("fs");
 function copyFromDefault(p) {
     if (!fs.existsSync(p)) {
         const defaultFile = `${p}.default`;
@@ -9,4 +9,4 @@ function copyFromDefault(p) {
     }
 }
 
-['.vscode/settings.json', '.vscode/extensions.json', '.vscode/launch.json'].map(copyFromDefault);
+[".vscode/settings.json", ".vscode/extensions.json", ".vscode/launch.json"].map(copyFromDefault);

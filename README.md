@@ -16,20 +16,17 @@ or
 yarn install
 ```
 
-
 ### Build everything:
-
 
 ```
 npm run build
 ```
 
-or 
+or
 
 ```
 yarn run build
 ```
-
 
 ### Run unit tests:
 
@@ -37,7 +34,7 @@ yarn run build
 npm run test
 ```
 
-or 
+or
 
 ```
 yarn run test
@@ -48,7 +45,6 @@ yarn run test
 ### Testnet (Rinkeby)
 
 Deployment:
-
 
 ```
 npx hardhat run scripts/deploy.js --network rinkeby
@@ -71,7 +67,6 @@ npx hardhat verify --network rinkeby DEPLOYED_CONTRACT_ADDRESS 0xb66e545739be353
 ```
 npx hardhat console --network rinkeby
 ```
-
 
 Mint token:
 

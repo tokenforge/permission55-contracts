@@ -10,7 +10,7 @@ contracts:
     - yarn build
     - yarn lint:sol
     - yarn gas
-#    - yarn run coverage  # makes different Behaviour with reverts at the moment 
+#    - yarn run coverage  # makes different Behaviour with reverts at the moment
 
 #lint:
 #  stage: slither

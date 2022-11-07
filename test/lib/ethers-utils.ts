@@ -1,7 +1,11 @@
-import {ContractReceipt, ethers, Event} from "ethers";
-import {Result} from "@ethersproject/abi";
+import { ContractReceipt, ethers, Event } from "ethers";
+import { Result } from "@ethersproject/abi";
 
-export function findEventArgsByNameFromReceipt(receipt: ContractReceipt, eventName: string, argName?: string): null|Result|Array<any>|any {
+export function findEventArgsByNameFromReceipt(
+    receipt: ContractReceipt,
+    eventName: string,
+    argName?: string
+): null | Result | Array<any> | any {
     const events: Event[] | undefined = receipt.events?.filter((x: Event) => {
         return x.event == eventName;
     });

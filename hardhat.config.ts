@@ -1,40 +1,41 @@
-import {config as dotEnvConfig} from 'dotenv';
+import { config as dotEnvConfig } from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
-import 'hardhat-deploy';
-import 'hardhat-deploy-tenderly';
+import "hardhat-deploy";
+import "hardhat-deploy-tenderly";
 
 dotEnvConfig();
 
-import {HardhatUserConfig} from 'hardhat/types';
+import { HardhatUserConfig } from "hardhat/types";
 
-import 'solidity-coverage';
-import 'hardhat-gas-reporter';
+import "solidity-coverage";
+import "hardhat-gas-reporter";
 
-import {node_url, accounts, addForkConfiguration} from './utils/network';
+import { node_url, accounts, addForkConfiguration } from "./utils/network";
 
 // TODO: reenable solidity-coverage when it works
 // import "solidity-coverage";
 
-const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
-const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET || '';
+const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET || "";
 
 const PRIVATE_KEY_RINKEBY =
-    process.env.PRIVATE_KEY_RINKEBY! ||
-    '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3'; // well known private key
-
+    process.env.PRIVATE_KEY_RINKEBY! || "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"; // well known private key
 
 const config: HardhatUserConfig = {
-    defaultNetwork: 'hardhat',
+    defaultNetwork: "hardhat",
     solidity: {
-        compilers: [{
-            version: '0.8.9', settings: {
-                optimizer: {
-                    enabled: true,
-                    runs: 1000,
+        compilers: [
+            {
+                version: "0.8.9",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 1000,
+                    },
                 },
-            }
-        }],
+            },
+        ],
     },
 
     namedAccounts: {
@@ -44,73 +45,72 @@ const config: HardhatUserConfig = {
     },
 
     networks: addForkConfiguration({
-
         hardhat: {
             initialBaseFeePerGas: 0, // to fix : https://github.com/sc-forks/solidity-coverage/issues/652, see https://github.com/sc-forks/solidity-coverage/issues/652#issuecomment-896330136
         },
         localhost: {
-            url: node_url('localhost'),
+            url: node_url("localhost"),
             accounts: accounts(),
         },
         staging: {
-            url: node_url('rinkeby'),
-            accounts: accounts('rinkeby'),
+            url: node_url("rinkeby"),
+            accounts: accounts("rinkeby"),
         },
 
         rinkeby: {
-            url: node_url('rinkeby'),
-            accounts: accounts('rinkeby'),
+            url: node_url("rinkeby"),
+            accounts: accounts("rinkeby"),
             gas: 2100000,
-            gasPrice: 8000000000
+            gasPrice: 8000000000,
         },
         mumbai: {
-            url: node_url('polygon-mumbai'),
-            accounts: accounts('mumbai'),
+            url: node_url("polygon-mumbai"),
+            accounts: accounts("mumbai"),
         },
         matic: {
-            url: node_url('polygon-matic'),
-            accounts: accounts('matic'),
+            url: node_url("polygon-matic"),
+            accounts: accounts("matic"),
         },
         kovan: {
-            url: node_url('kovan'),
-            accounts: accounts('kovan'),
+            url: node_url("kovan"),
+            accounts: accounts("kovan"),
         },
         goerli: {
-            url: node_url('goerli'),
-            accounts: accounts('goerli'),
+            url: node_url("goerli"),
+            accounts: accounts("goerli"),
             gas: 2100000,
-            gasPrice: 8000000000
+            gasPrice: 8000000000,
         },
         arbitrum_goerli: {
-            url: node_url('ARBITRUM_GOERLI'),
-            accounts: accounts('goerli'),
+            url: node_url("ARBITRUM_GOERLI"),
+            accounts: accounts("goerli"),
             gas: 2100000,
-            gasPrice: 8000000000
+            gasPrice: 8000000000,
         },
         optimism_goerli: {
-            url: node_url('OPTIMISM_GOERLI'),
-            accounts: accounts('goerli'),
+            url: node_url("OPTIMISM_GOERLI"),
+            accounts: accounts("goerli"),
             gas: 2100000,
-            gasPrice: 8000000000
+            gasPrice: 8000000000,
         },
         fuji: {
-            url: 'https://api.avax-test.network/ext/bc/C/rpc',
+            url: "https://api.avax-test.network/ext/bc/C/rpc",
             gasPrice: 225000000000,
             chainId: 43113,
-            accounts: accounts('fuji'),
+            accounts: accounts("fuji"),
         },
         avalanche: {
-            url: 'https://api.avax.network/ext/bc/C/rpc',
+            url: "https://api.avax.network/ext/bc/C/rpc",
             gasPrice: 225000000000,
             chainId: 43114,
-            accounts: accounts('fuji'),
+            accounts: accounts("fuji"),
         },
         // Moonbase Alpha network specification (MoonBeam)
         moonbase: {
-            url: 'https://rpc.api.moonbase.moonbeam.network',
+            url: "https://rpc.api.moonbase.moonbeam.network",
             chainId: 1287, // 0x507 in hex,
-            accounts: accounts('moonbeam')
-        }        
+            accounts: accounts("moonbeam"),
+        },
     }),
     etherscan: {
         // Your API key for Etherscan
@@ -121,7 +121,7 @@ const config: HardhatUserConfig = {
     paths: {
         sources: "./contracts",
         artifacts: "./artifacts",
-        cache: "./cache"
+        cache: "./cache",
     },
 
     /*gasReporter: {
@@ -131,28 +131,27 @@ const config: HardhatUserConfig = {
     }*/
 
     typechain: {
-        outDir: 'typechain',
-        target: 'ethers-v5',
+        outDir: "typechain",
+        target: "ethers-v5",
     },
     mocha: {
         timeout: 0,
     },
     external: process.env.HARDHAT_FORK
         ? {
-            deployments: {
-                // process.env.HARDHAT_FORK will specify the network that the fork is made from.
-                // these lines allow it to fetch the deployments from the network being forked from both for node and deploy task
-                hardhat: ['deployments/' + process.env.HARDHAT_FORK],
-                localhost: ['deployments/' + process.env.HARDHAT_FORK],
-            },
-        }
+              deployments: {
+                  // process.env.HARDHAT_FORK will specify the network that the fork is made from.
+                  // these lines allow it to fetch the deployments from the network being forked from both for node and deploy task
+                  hardhat: ["deployments/" + process.env.HARDHAT_FORK],
+                  localhost: ["deployments/" + process.env.HARDHAT_FORK],
+              },
+          }
         : undefined,
 
     tenderly: {
-        project: 'template-ethereum-contracts',
+        project: "template-ethereum-contracts",
         username: process.env.TENDERLY_USERNAME as string,
     },
-
 };
 
 export default config;
