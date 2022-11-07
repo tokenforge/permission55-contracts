@@ -46,7 +46,11 @@ library LibMap_bytes32_string {
         return _map.keyset.content();
     }
 
-    function set(map storage _map, bytes32 _key, string memory _value) internal returns (bool) {
+    function set(
+        map storage _map,
+        bytes32 _key,
+        string memory _value
+    ) internal returns (bool) {
         _map.keyset.add(_key);
         _map.values[_key] = _value;
         return true;
