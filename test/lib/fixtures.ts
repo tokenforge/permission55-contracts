@@ -36,8 +36,6 @@ export async function deployPermissions() {
     const permissions = await permissionsFactory.deploy('https://admin-token-uri');
     await permissions.deployed();
 
-    console.log("DEPLOY PERMISSIONS")
-
     return {permissions};
 }
 

@@ -33,6 +33,10 @@ abstract contract PermissionsAware is PermissionRoles {
         }
     }
 
+    function permissions() public view returns (IPermissions55) {
+        return _permissions;
+    }
+
     function addCustomRoleToken(uint256 roleTokenId, uint256 tokenId) public {
         _customRoleTokens[roleTokenId].add(tokenId);
 
@@ -43,6 +47,18 @@ abstract contract PermissionsAware is PermissionRoles {
         _customRoleTokens[roleTokenId].remove(tokenId);
 
         emit CustomRoleTokenRemoved(roleTokenId, tokenId);
+    }
+
+    function getCustomRoleTokenAt(uint256 roleTokenId, uint256 position) public view returns (uint256) {
+        return _customRoleTokens[roleTokenId].values[position];
+    }
+
+    function getCustomRoleTokenCount(uint256 roleTokenId) public view returns (uint256) {
+        return _customRoleTokens[roleTokenId].length();
+    }
+
+    function getCustomRoleTokens(uint256 roleTokenId) public view returns (uint256[] memory) {
+        return _customRoleTokens[roleTokenId].content();
     }
 
     function _hasRole(uint256 roleTokenId, address account) internal view virtual override returns (bool) {

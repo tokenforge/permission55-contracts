@@ -39,7 +39,7 @@ describe('Custom PermissionSet', () => {
             .withArgs(myDefaultCustomPermissionSetId, myNewCustomPermissionSetId)
     })
 
-    it.only('should emit PermissionSetIdChanged-Event upon changing PermissionSetID', async () => {
+    it('should emit PermissionSetIdChanged-Event upon changing PermissionSetID', async () => {
         const {permissions, permissionsOverwriter} = await loadFixture(deployPermissionsOverwriter);
 
         const affectedRoleIds = {

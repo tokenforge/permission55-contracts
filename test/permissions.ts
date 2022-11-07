@@ -2,7 +2,6 @@ import {ethers} from 'hardhat';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
-import { Permissions55, Permissions55__factory} from "../typechain";
 import {BigNumber} from 'ethers';
 import {deployPermissions, setupSigners} from "./lib/fixtures";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -14,7 +13,6 @@ const {expect} = chai;
 describe('Permissions55', () => {
 
     it('Counter 1', async() => {
-        const {deployer, chantal} = await setupSigners();
         const {permissions} = await loadFixture(deployPermissions);
 
         await permissions.incCounter();
@@ -22,7 +20,6 @@ describe('Permissions55', () => {
     })
 
     it('Counter 2', async() => {
-        const {deployer, chantal} = await setupSigners();
         const {permissions} = await loadFixture(deployPermissions);
 
         await permissions.incCounter();
@@ -30,7 +27,7 @@ describe('Permissions55', () => {
     })
 
     it('Deployer will have all rights', async() => {
-        const {deployer, chantal} = await setupSigners();
+        const {deployer} = await setupSigners();
         const {permissions} = await loadFixture(deployPermissions);
         
         expect(await permissions.isAdmin(deployer.address)).to.be.true;
@@ -43,7 +40,7 @@ describe('Permissions55', () => {
     })
 
     it('will check roles specifically', async () => {
-        const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+        const {axel, ben, deployer} = await setupSigners();
         const {permissions} = await loadFixture(deployPermissions);
 
         const TOKEN_ROLE_ADMIN = await permissions.TOKEN_ROLE_ADMIN();
@@ -101,7 +98,7 @@ describe('Permissions55', () => {
     })
 
     it('It wont be allowed to register permission sets as non-deployer', async() => {
-        const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+        const {axel} = await setupSigners();
         const {permissions} = await loadFixture(deployPermissions);
 
         const permissionsAsAxel = permissions.connect(axel);
@@ -110,7 +107,7 @@ describe('Permissions55', () => {
     })
 
     it('It wont be allowed to remove permission sets as non-deployer', async() => {
-        const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+        const {axel} = await setupSigners();
         const {permissions} = await loadFixture(deployPermissions);
 
         await permissions.registerPermissionSet('test')
@@ -121,7 +118,7 @@ describe('Permissions55', () => {
     })
     
     it('Will give me a list of specific Role-token holders', async () => {
-        const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+        const {axel, ben, chantal, deployer} = await setupSigners();
         const {permissions} = await deployPermissions();
 
         await permissions.create(axel.address, 2, 'https://tokens/2');
@@ -143,10 +140,34 @@ describe('Permissions55', () => {
         expect(holdersFor3).to.eql([chantal.address]);
     });
     
+    it('Creation of token will emit the right events', async() => {
+        const {axel, ben, chantal, deployer, minter1} = await setupSigners();
+        const {permissions} = await deployPermissions();
+        
+        await expect(permissions.create(minter1.address, await permissions.TOKEN_ROLE_MINTER(), 'https://whitelisted'))
+            .to.emit(permissions, 'TransferSingle')
+            .withArgs(deployer.address, ethers.constants.AddressZero, minter1.address, await permissions.TOKEN_ROLE_MINTER(), 1)
+
+        // Whitelisting share holders: Axel, Ben, Chantal
+        await expect(permissions.create(axel.address, await permissions.TOKEN_ROLE_IS_WHITELISTED(), 'https://is_whitelisted'))
+            .to.emit(permissions, 'TransferSingle')
+            .withArgs(deployer.address, ethers.constants.AddressZero, axel.address, await permissions.TOKEN_ROLE_IS_WHITELISTED(), 1)
+
+        await expect(await permissions.mint(ben.address, await permissions.TOKEN_ROLE_IS_WHITELISTED()))
+            .to.emit(permissions, 'TransferSingle')
+            .withArgs(deployer.address, ethers.constants.AddressZero, ben.address, await permissions.TOKEN_ROLE_IS_WHITELISTED(), 1)
+
+        await expect(await permissions.mint(chantal.address, await permissions.TOKEN_ROLE_IS_WHITELISTED()))
+            .to.emit(permissions, 'TransferSingle')
+            .withArgs(deployer.address, ethers.constants.AddressZero, chantal.address, await permissions.TOKEN_ROLE_IS_WHITELISTED(), 1)
+
+
+    })
+    
     describe('Token Holders can burn their tokens', async() => {
         
         async function setupPermissionsLocally() {
-            const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+            const {axel, ben, chantal} = await setupSigners();
             const {permissions} = await loadFixture(deployPermissions);
             
             await permissions.create(axel.address, 2, 'https://axel');
@@ -159,7 +180,7 @@ describe('Permissions55', () => {
         }
     
         it('Token Holders will also be automatically updated after tokens has been burned', async () => {
-            const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+            const {axel, ben, chantal} = await setupSigners();
             const {permissions} = await loadFixture(setupPermissionsLocally);
 
             // Axel holds now Token 2
@@ -186,35 +207,27 @@ describe('Permissions55', () => {
         });
     
         it(' variant 2: Token Holders will also be automatically updated after tokens has been burned', async () => {
-            const {axel, ben, chantal, deployer, minter1, minter2} = await setupSigners();
+            const {axel, ben, chantal} = await setupSigners();
             const {permissions} = await loadFixture(setupPermissionsLocally);
 
-            console.log('A1');
-            
             // Axel burns his token (Token #2)
             await (permissions.connect(axel)).burn(axel.address, 2, 1);
 
-            console.log('A2');
             // Ben burns his token (Token #2)
             await (permissions.connect(ben)).burn(ben.address, 2, 1);
 
-            console.log('A3');
             // Only Chantal still holds Token #2 now 
             const holdersFor2b = await permissions.ownersOf(2);
             expect(holdersFor2b).to.eql([chantal.address]);
 
-            console.log('A4');
             // Only Ben & Chantal holds Token #3 
             const holdersFor3 = await permissions.ownersOf(3);
             expect(holdersFor3).to.eql([ben.address, chantal.address]);
 
-            console.log('A5');
             // Chantal burns her token (Token #2)
             await (permissions.connect(chantal)).burn(chantal.address, 2, 1);
             const holdersFor2c = await permissions.ownersOf(2);
             expect(holdersFor2c).to.eql([]);
-
-            console.log('A6');
         });
 
         /*it(' Axel gives Allowance to Chantal to burn his token', async () => {

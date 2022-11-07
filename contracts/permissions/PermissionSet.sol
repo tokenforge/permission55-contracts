@@ -10,8 +10,6 @@ import "../lib/solstruct/LibMap.bytes32.string.sol";
 import "../lib/solstruct/LibMap.uint256.string.sol";
 
 contract PermissionSet {
-    using LibSet_uint256 for LibSet_uint256.set;
-    using LibSet_address for LibSet_address.set;
     using LibMap_uint256_string for LibMap_uint256_string.map;
 
     event PermissionSetAdded(uint256 indexed id, string indexed name);

@@ -10,20 +10,14 @@ import {HardhatUserConfig} from 'hardhat/types';
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
 
-import {task} from 'hardhat/config';
-
 import {node_url, accounts, addForkConfiguration} from './utils/network';
 
 // TODO: reenable solidity-coverage when it works
 // import "solidity-coverage";
 
-const INFURA_API_KEY = process.env.INFURA_API_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
 
 const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET || '';
-
-console.log("INFURA: ", INFURA_API_KEY)
-console.log(node_url('rinkeby'));
 
 const PRIVATE_KEY_RINKEBY =
     process.env.PRIVATE_KEY_RINKEBY! ||
