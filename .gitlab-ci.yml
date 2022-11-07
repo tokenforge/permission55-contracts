@@ -8,7 +8,8 @@ contracts:
   script:
     - yarn install
     - yarn build
-    - yarn lint:sol
+#    - yarn lint:sol
+    - yarn test
     - yarn gas
 #    - yarn run coverage  # makes different Behaviour with reverts at the moment
 
