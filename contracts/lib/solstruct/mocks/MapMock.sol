@@ -7,49 +7,49 @@ import "../LibMap.uint256.string.sol";
 contract MapMock {
     using LibMap_uint256_string for LibMap_uint256_string.map;
 
-    LibMap_uint256_string.map internal data;
+    LibMap_uint256_string.map internal _data;
 
     function length() public view returns (uint256) {
-        return data.length();
+        return _data.length();
     }
 
     function tryGet(uint256 _key) public view returns (bool, string memory) {
-        return data.tryGet(_key);
+        return _data.tryGet(_key);
     }
 
     function get(uint256 _key) public view returns (string memory) {
-        return data.get(_key);
+        return _data.get(_key);
     }
 
     function keyAt(uint256 _index) public view returns (uint256) {
-        return data.keyAt(_index);
+        return _data.keyAt(_index);
     }
 
     function at(uint256 _index) public view returns (uint256, string memory) {
-        return data.at(_index);
+        return _data.at(_index);
     }
 
     function indexOf(uint256 _key) public view returns (uint256) {
-        return data.indexOf(_key);
+        return _data.indexOf(_key);
     }
 
     function contains(uint256 _key) public view returns (bool) {
-        return data.contains(_key);
+        return _data.contains(_key);
     }
 
     function keys() public view returns (uint256[] memory) {
-        return data.keys();
+        return _data.keys();
     }
 
     function set(uint256 _key, string memory _value) public returns (bool) {
-        return data.set(_key, _value);
+        return _data.set(_key, _value);
     }
 
     function del(uint256 _key) public returns (bool) {
-        return data.del(_key);
+        return _data.del(_key);
     }
 
     function clear() public returns (bool) {
-        return data.clear();
+        return _data.clear();
     }
 }

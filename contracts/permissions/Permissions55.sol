@@ -48,7 +48,7 @@ contract Permissions55 is
 
     event CustomTokenSetAdded(uint256 indexed roleTokenId, uint256 indexed customTokenId);
 
-    uint256 private counter;
+    uint256 private _counter;
 
     modifier onlyMintingRole(uint256 id) {
         (bool success, uint256 requiredPermission) = checkMintingPermissions(msg.sender, id);
@@ -74,11 +74,11 @@ contract Permissions55 is
     }
 
     function getCounter() public view returns (uint256) {
-        return counter;
+        return _counter;
     }
 
     function incCounter() public {
-        counter++;
+        _counter++;
     }
 
     function addPermissionSet(uint256 id, string calldata name) external onlyRole(TOKEN_ROLE_DEPLOYER) {
