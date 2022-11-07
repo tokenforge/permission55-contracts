@@ -3,7 +3,7 @@
 // Author: Hagen Hübel, hagen@token-forge.io
 pragma solidity ^0.8.7;
 
-interface CredistryErrors {
+interface CregistryErrors {
     /**
      * @dev Revert with an error when RoleId-overwrite did not changed anything
      */

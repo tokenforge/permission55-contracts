@@ -5,9 +5,9 @@
 pragma solidity ^0.8.7;
 
 import "./PermissionsAware.sol";
-import "../lib/CredistryErrors.sol";
+import "../lib/CregistryErrors.sol";
 
-contract PermissionsOverwriter is PermissionsAware, CredistryErrors {
+contract PermissionsOverwriter is PermissionsAware, CregistryErrors {
     event SetRoleIdOverwritten(uint256 roleId, bool overwrite);
 
     uint256 public constant PERMISSION_ID_DELTA = 1000;

@@ -5,10 +5,10 @@
 pragma solidity ^0.8.7;
 
 import "../permissions/PermissionRoles.sol";
-import "../lib/CredistryErrors.sol";
+import "../lib/CregistryErrors.sol";
 import "../interfaces/IPropertiesAware.sol";
 
-abstract contract PropertiesAware is PermissionRoles, CredistryErrors, IPropertiesAware {
+abstract contract PropertiesAware is PermissionRoles, CregistryErrors, IPropertiesAware {
     event PropertyChanged(bytes32 indexed propertyName, bytes oldValue, bytes newValue);
 
     mapping(bytes32 => string) internal _properties;
