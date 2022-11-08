@@ -40,22 +40,6 @@ contract PermissionsOverwriter is PermissionsAware, CregistryErrors {
 
         _permissionSetId = permissionSetId;
 
-        uint256[5] memory roleIds = [
-            TOKEN_ROLE_MINTER,
-            TOKEN_ROLE_WHITELIST_ADMIN,
-            TOKEN_ROLE_TRANSFERER,
-            TOKEN_ROLE_OPERATOR,
-            TOKEN_ROLE_IS_WHITELISTED
-        ];
-
-        for (uint256 i = 0; i < roleIds.length; ++i) {
-            if (oldPermissionSetId > 0) {
-                // cleaning up old custom role tokens
-                removeCustomRoleToken(roleIds[i], transformedRoleId(oldPermissionSetId, roleIds[i]));
-            }
-            addCustomRoleToken(roleIds[i], transformedRoleId(permissionSetId, roleIds[i]));
-        }
-
         emit PermissionSetIdChanged(oldPermissionSetId, permissionSetId);
     }
 

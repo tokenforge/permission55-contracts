@@ -1,0 +1,495 @@
+import { ethers } from "hardhat";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ERC20SPV2, ERC20SPV2__factory, Permissions55, Permissions55__factory } from "../typechain";
+import { BigNumber } from "ethers";
+
+chai.use(chaiAsPromised);
+const { expect } = chai;
+
+const VALUES_SPV_NAME = "Unlimited Financial Services";
+
+describe("TokenMinting", () => {
+    let token: ERC20SPV2,
+        tokenFactory: ERC20SPV2__factory,
+        permissions: Permissions55,
+        random: SignerWithAddress,
+        axel: SignerWithAddress,
+        ben: SignerWithAddress,
+        chantal: SignerWithAddress,
+        deployer: SignerWithAddress,
+        minter1: SignerWithAddress,
+        minter2: SignerWithAddress,
+        operator1: SignerWithAddress,
+        operator2: SignerWithAddress;
+
+    beforeEach(async () => {
+        [random, axel, ben, chantal, deployer, minter1, minter2, operator1, operator2] = await ethers.getSigners();
+
+        tokenFactory = (await ethers.getContractFactory("ERC20SPV2", deployer)) as ERC20SPV2__factory;
+
+        const permissionsFactory = (await ethers.getContractFactory(
+            "Permissions55",
+            deployer
+        )) as Permissions55__factory;
+        permissions = await permissionsFactory.deploy("https://admin-token-uri");
+        await permissions.deployed();
+
+        const defaultPermissionSetId = 0;
+        token = await tokenFactory
+            .connect(deployer)
+            .deploy(permissions.address, defaultPermissionSetId, "Coin", "CCC", "", "", "1");
+        await token.deployed();
+    });
+
+    it("will return the correct version", async () => {
+        expect(await token.version()).to.eq(2);
+    });
+
+    it("will revert if a property will be set without change", async () => {
+        await token.setProperty(await token.PROP_SPV_NAME(), VALUES_SPV_NAME);
+        await expect(token.setProperty(await token.PROP_SPV_NAME(), VALUES_SPV_NAME)).to.be.revertedWithCustomError(
+            token,
+            "NewValueIsEqualToOldValue"
+        );
+    });
+
+    it("spv2: minting for non-minter accounts should not be allowed", async () => {
+        await expect(token.connect(chantal).mint(chantal.address, 1001)).to.be.revertedWith(
+            `AccessControl: account ${chantal.address.toLowerCase()} is missing role 0x05`
+        );
+    });
+
+    describe("minter-role can mint tokens", async () => {
+        beforeEach(async () => {
+            // add Minter1 as minter
+            await expect(
+                permissions.create(minter1.address, await permissions.TOKEN_ROLE_MINTER(), "https://whitelisted")
+            )
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(
+                    deployer.address,
+                    ethers.constants.AddressZero,
+                    minter1.address,
+                    await permissions.TOKEN_ROLE_MINTER(),
+                    1
+                );
+
+            // Whitelisting Axel
+            await expect(
+                permissions.create(axel.address, await permissions.TOKEN_ROLE_IS_WHITELISTED(), "https://whitelisted")
+            )
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(
+                    deployer.address,
+                    ethers.constants.AddressZero,
+                    axel.address,
+                    await permissions.TOKEN_ROLE_IS_WHITELISTED(),
+                    1
+                );
+        });
+
+        it("should mint tokens to Axel successfully", async () => {
+            const totalSupplyBefore = await token.totalSupply();
+
+            const balanceBefore = await token.balanceOf(axel.address);
+            expect(balanceBefore).to.eq(0);
+
+            await expect(token.connect(minter1).mint(axel.address, 123))
+                .to.emit(token, "Transfer")
+                .withArgs(ethers.constants.AddressZero, axel.address, 123);
+
+            const balance = await token.balanceOf(axel.address);
+            expect(balance).to.eq("123");
+
+            const totalSupply = await token.totalSupply();
+            expect(totalSupply).to.eq(totalSupplyBefore.add(123));
+        });
+
+        it("minting for Minter2 account should not be allowed", async () => {
+            await expect(token.connect(minter2).mint(axel.address, 11)).to.be.revertedWith(
+                `AccessControl: account ${minter2.address.toLowerCase()} is missing role 0x05`
+            );
+        });
+
+        it("SPV2: adding another minter should work and let they mint tokens finally", async () => {
+            await permissions.mint(minter2.address, await permissions.TOKEN_ROLE_MINTER());
+            await expect(token.connect(minter2).mint(axel.address, 12))
+                .to.emit(token, "Transfer")
+                .withArgs(ethers.constants.AddressZero, axel.address, 12);
+        });
+
+        it("removing Axel from Whitelist will cause minting to fail", async () => {
+            await permissions.burnAs(axel.address, await permissions.TOKEN_ROLE_IS_WHITELISTED());
+
+            await expect(token.connect(minter1).mint(axel.address, 11)).to.be.revertedWith(
+                `ERC20SPV2: account ${axel.address.toLowerCase()} is not verified`
+            );
+        });
+    });
+
+    describe("Permissions with custom tokens", async () => {
+        const NEW_WHITELIST_ADMIN = 100;
+
+        it("Will consider custom tokens successfully", async () => {
+            await expect(token.addCustomRoleToken(await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), NEW_WHITELIST_ADMIN))
+                .to.emit(token, "CustomRoleTokenAdded")
+                .withArgs(await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), NEW_WHITELIST_ADMIN);
+
+            expect(
+                await token["hasRole(uint256,address)"](await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), axel.address)
+            ).to.be.false;
+
+            // Axel becomes WhiteListAdmin with NEW_WHITELIST_ADMIN
+            await expect(permissions.create(axel.address, NEW_WHITELIST_ADMIN, "https://minter"))
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(deployer.address, ethers.constants.AddressZero, axel.address, NEW_WHITELIST_ADMIN, 1);
+
+            expect(
+                await token["hasRole(uint256,address)"](await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), axel.address)
+            ).to.be.true;
+        });
+
+        it("Will consider custom tokens successfully as signer", async () => {
+            await expect(token.addCustomRoleToken(await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), NEW_WHITELIST_ADMIN))
+                .to.emit(token, "CustomRoleTokenAdded")
+                .withArgs(await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), NEW_WHITELIST_ADMIN);
+
+            const tokenAsChantal = token.connect(chantal);
+
+            expect(await tokenAsChantal["hasRole(uint256)"](await permissions.TOKEN_ROLE_WHITELIST_ADMIN())).to.be
+                .false;
+
+            // Chantal becomes WhiteListAdmin with NEW_WHITELIST_ADMIN
+            await permissions.create(chantal.address, NEW_WHITELIST_ADMIN, "https://minter");
+
+            expect(await tokenAsChantal["hasRole(uint256)"](await permissions.TOKEN_ROLE_WHITELIST_ADMIN())).to.be.true;
+        });
+
+    });
+
+    describe("use a custom permission set", async () => {
+        const myPermissionSetId = 2;
+
+        let customMinterRoleId: BigNumber,
+            customIsWhitelistedRoleId: BigNumber,
+            benAsMinter: ERC20SPV2,
+            token: ERC20SPV2;
+
+        beforeEach(async () => {
+            await permissions.addPermissionSet(myPermissionSetId, "CustomSet2");
+
+            token = await tokenFactory
+                .connect(deployer)
+                .deploy(
+                    permissions.address,
+                    myPermissionSetId,
+                    "MyBestVehicleToken",
+                    "SPV",
+                    "My Best Vehicle",
+                    "partner1",
+                    "1"
+                );
+            await token.deployed();
+
+            customMinterRoleId = await token.transformedRoleId(myPermissionSetId, await token.TOKEN_ROLE_MINTER());
+            customIsWhitelistedRoleId = await token.transformedRoleId(
+                myPermissionSetId,
+                await token.TOKEN_ROLE_IS_WHITELISTED()
+            );
+
+            // Ben becomes Minter according to custom permission set (through an admin account)
+            benAsMinter = token.connect(ben);
+            await permissions.create(ben.address, customMinterRoleId, "https://minter");
+        });
+
+        describe("values will be calculated correctly", async () => {
+            it("will detect the proper permission set on token contract", async () => {
+                expect(await token.getPermissionSetId()).to.eq(myPermissionSetId);
+            });
+
+            it("calculates the final custom Minter-RoleID accordingly", async () => {
+                expect(customMinterRoleId).to.eq(
+                    (await token.TOKEN_ROLE_MINTER()).toNumber() +
+                        myPermissionSetId * (await token.PERMISSION_ID_DELTA()).toNumber()
+                );
+            });
+
+            it("calculates the final custom IsWhiteListed-RoleID accordingly", async () => {
+                expect(customIsWhitelistedRoleId).to.eq(
+                    (await token.TOKEN_ROLE_IS_WHITELISTED()).toNumber() +
+                        myPermissionSetId * (await token.PERMISSION_ID_DELTA()).toNumber()
+                );
+            });
+        });
+
+        it("Will recognize correctly that Ben has the custom minter role", async () => {
+            await expect(await token["hasRole(uint256,address)"](customMinterRoleId, ben.address)).to.eq(true);
+        });
+
+        it("overwrite role-ids will handle changed and unchanged values correctly ", async () => {
+            expect(await token.isRoleIdOverwritten(await token.TOKEN_ROLE_MINTER())).to.be.false;
+            await token.setRoleIdOverwrite(await token.TOKEN_ROLE_MINTER(), true);
+            expect(await token.isRoleIdOverwritten(await token.TOKEN_ROLE_MINTER())).to.be.true;
+
+            // check to overwrite the same setting twice
+            await expect(token.setRoleIdOverwrite(await token.TOKEN_ROLE_MINTER(), true)).to.be.revertedWithCustomError(
+                token,
+                "ErrRoleIdOverwriteNotChanged"
+            );
+        });
+
+        it("Ben will be allowed to mint due to the new customMinterRole, once Axel is whitelisted", async () => {
+            const TOKEN_ROLE_MINTER = await token.TOKEN_ROLE_MINTER();
+
+            // We finally overwrite RoleIDs
+            await token.setRoleIdOverwrite(await token.TOKEN_ROLE_MINTER(), true);
+            await token.setRoleIdOverwrite(await token.TOKEN_ROLE_IS_WHITELISTED(), true);
+
+            expect(await permissions.balanceOf(ben.address, customMinterRoleId)).to.eq(1);
+
+            // Permissions55 is aware of that Ben as the Custom Minter Role
+            expect(await permissions["hasRole(uint256,address)"](customMinterRoleId, ben.address)).to.be.true;
+
+            // Permissions55 is NOT aware of that this is customRoleID associated with TOKEN_ROLE_MINTER, because
+            // this is the domain of SPV2-COntract
+            expect(await permissions["hasRole(uint256,address)"](TOKEN_ROLE_MINTER, ben.address)).to.be.false;
+
+            // The SPV2-contract IS aware of that requesting TOKEN_ROLE_MINTER will return true once customRoleMinter-Token exists
+            expect(await token["hasRole(uint256,address)"](TOKEN_ROLE_MINTER, ben.address)).to.be.true;
+
+            // Token still expects Role 5 and not role CustomMinterRole
+            expect(await token["hasRole(uint256,address)"](customMinterRoleId, ben.address)).to.be.true;
+            expect(await token["hasRole(uint256,address)"](TOKEN_ROLE_MINTER, ben.address)).to.be.true;
+
+            // we mint custom IS_WHITELISTED to axel in order to enable him to receive tokens
+            await permissions.create(axel.address, customIsWhitelistedRoleId, "https://is_whitelisted");
+
+            // Ben finally mints...
+            await benAsMinter.mint(axel.address, 123);
+        });
+
+        it("Will recognize correctly that Axel is not verified/whitelisted yet", async () => {
+            // We finally overwrite RoleIDs
+            await token.setRoleIdOverwrite(await token.TOKEN_ROLE_MINTER(), true);
+            await token.setRoleIdOverwrite(await token.TOKEN_ROLE_IS_WHITELISTED(), true);
+
+            // At the moment, Axel is not allowed to receive any tokens because he lacks of IsWhitelisted-Role
+            await expect(benAsMinter.mint(axel.address, 123)).to.be.revertedWith(
+                `ERC20SPV2: account ${axel.address.toLowerCase()} is not verified`
+            );
+        });
+
+        describe("Axel becomes IsWhiteListed according to the new custom permission set", async () => {
+            beforeEach(async () => {
+                // Axel becomes "Whitelisted" through an admin account
+                await permissions.create(axel.address, customIsWhitelistedRoleId, "https://whitelisted");
+
+                await token.setRoleIdOverwrite(await token.TOKEN_ROLE_MINTER(), true);
+                await token.setRoleIdOverwrite(await token.TOKEN_ROLE_IS_WHITELISTED(), true);
+            });
+
+            it("Will recognize a new member based on the custom permission set", async () => {
+                // Finally we mint token to Axel successfully
+                await expect(benAsMinter.mint(axel.address, 123))
+                    .to.emit(token, "Transfer")
+                    .withArgs(ethers.constants.AddressZero, axel.address, 123);
+
+                // We burn the custom permission token for IsWhitelisted on Axels account to see what happens...
+                await permissions.burnAs(axel.address, customIsWhitelistedRoleId);
+
+                // Suddenly Axel is not allowed any more to receive company tokens:
+                await expect(benAsMinter.mint(axel.address, 125)).to.be.revertedWith(
+                    `ERC20SPV2: account ${axel.address.toLowerCase()} is not verified`
+                );
+            });
+
+            false &&
+                describe("Changing the custom permission set ID to another ID will be recognized correctly", async () => {
+                    const newPermissionSetId = 3;
+                    let oldCustomerMinterRole: number;
+
+                    beforeEach(async () => {
+                        await permissions.addPermissionSet(newPermissionSetId, "NewCustomSet3");
+                        await token.setPermissionSetId(newPermissionSetId);
+
+                        oldCustomerMinterRole = customMinterRoleId.toNumber();
+
+                        customMinterRoleId = await token.transformedRoleId(
+                            newPermissionSetId,
+                            await token.TOKEN_ROLE_MINTER()
+                        );
+                        customIsWhitelistedRoleId = await token.transformedRoleId(
+                            newPermissionSetId,
+                            await token.TOKEN_ROLE_IS_WHITELISTED()
+                        );
+                    });
+
+                    it("Ben is still allowed to mint token according to the Old permission set", async () => {
+                        // ... because it is not applied yet
+                        console.log("-----------------------------------------------");
+
+                        // @TODO: Fix test
+
+                        await expect(benAsMinter.mint(axel.address, 123))
+                            .to.emit(token, "Transfer")
+                            .withArgs(ethers.constants.AddressZero, ben.address, 123);
+
+                        console.log("#############################################");
+                    });
+
+                    it("Minter Role will be active", async () => {
+                        expect(await token["hasRole(uint256,address)"](await token.TOKEN_ROLE_MINTER(), ben.address)).to
+                            .be.true;
+                    });
+
+                    describe("We apply the new custom permission set on the Token", async () => {
+                        beforeEach(async () => {
+                            // change the existing permissionSetId to the new one:
+                            await expect(token.setPermissionSetId(newPermissionSetId))
+                                .to.emit(token, "PermissionSetIdChanged")
+                                .withArgs(myPermissionSetId, newPermissionSetId);
+                        });
+
+                        it("Suddenly Ben is not allowed any more to mint tokens to Axel", async () => {
+                            await expect(benAsMinter.mint(axel.address, 125)).to.be.revertedWith(
+                                `AccessControl: account ${ben.address.toLowerCase()} is missing role 0x05`
+                            );
+                        });
+
+                        it("But when we apply the new custom set, Axel is NOT allowed anymore to mint token according to the Old permission set", async () => {
+                            // Ben gets applied for the new minter role ID
+                            await permissions.create(ben.address, customMinterRoleId, "https://custom/minter");
+                            expect(
+                                await token["hasRole(uint256,address)"](await token.TOKEN_ROLE_MINTER(), ben.address)
+                            ).to.be.true;
+                            expect(await token["hasRole(uint256,address)"](customMinterRoleId, ben.address)).to.be.true;
+
+                            // But suddenly Axel is not allowed any more to receive company tokens, although Ben was allowed to mint them
+                            await expect(benAsMinter.mint(axel.address, 125)).to.be.revertedWith(
+                                `ERC20SPV2: account ${axel.address.toLowerCase()} is not verified`
+                            );
+
+                            // Axel becomes "Whitelisted" according to the new WhiteListedRoleId
+                            await permissions.create(
+                                axel.address,
+                                customIsWhitelistedRoleId,
+                                "https://custom/whitelisted"
+                            );
+
+                            // And suddenly he is enabled to receive tokens again
+                            await expect(benAsMinter.mint(axel.address, 126))
+                                .to.emit(token, "Transfer")
+                                .withArgs(ethers.constants.AddressZero, axel.address, 126);
+                        });
+
+                        it("wont accept old permission set anymore", async () => {
+                            expect(
+                                await token["hasRole(uint256,address)"](await token.TOKEN_ROLE_MINTER(), ben.address)
+                            ).to.be.false;
+                            //expect(await token["hasRole(uint256,address)"](oldCustomerMinterRole, ben.address)).to.be.false;
+                        });
+
+                        it("but deployer still has its admin-role", async () => {
+                            expect(
+                                await token["hasRole(uint256,address)"](
+                                    await token.TOKEN_ROLE_ADMIN(),
+                                    deployer.address
+                                )
+                            ).to.be.true;
+                        });
+                    });
+                });
+        });
+    });
+
+    describe("Transfer of tokens", async () => {
+        beforeEach(async () => {
+            await expect(
+                permissions.create(minter1.address, await permissions.TOKEN_ROLE_MINTER(), "https://whitelisted")
+            )
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(
+                    deployer.address,
+                    ethers.constants.AddressZero,
+                    minter1.address,
+                    await permissions.TOKEN_ROLE_MINTER(),
+                    1
+                );
+
+            // Whitelisting share holders: Axel, Ben, Chantal
+            await expect(
+                permissions.create(
+                    axel.address,
+                    await permissions.TOKEN_ROLE_IS_WHITELISTED(),
+                    "https://is_whitelisted"
+                )
+            )
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(
+                    deployer.address,
+                    ethers.constants.AddressZero,
+                    axel.address,
+                    await permissions.TOKEN_ROLE_IS_WHITELISTED(),
+                    1
+                );
+
+            await expect(await permissions.mint(ben.address, await permissions.TOKEN_ROLE_IS_WHITELISTED()))
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(
+                    deployer.address,
+                    ethers.constants.AddressZero,
+                    ben.address,
+                    await permissions.TOKEN_ROLE_IS_WHITELISTED(),
+                    1
+                );
+
+            await expect(await permissions.mint(chantal.address, await permissions.TOKEN_ROLE_IS_WHITELISTED()))
+                .to.emit(permissions, "TransferSingle")
+                .withArgs(
+                    deployer.address,
+                    ethers.constants.AddressZero,
+                    chantal.address,
+                    await permissions.TOKEN_ROLE_IS_WHITELISTED(),
+                    1
+                );
+
+            // Operator1 becomes Transferor-Tole
+            await permissions.create(
+                operator1.address,
+                await permissions.TOKEN_ROLE_TRANSFERER(),
+                "https://transfer-role"
+            );
+
+            // We pre-mint some tokens to each shareholder
+            await token.connect(minter1).mint(axel.address, 200);
+            await token.connect(minter1).mint(ben.address, 500);
+            await token.connect(minter1).mint(chantal.address, 500);
+        });
+
+        it("wont be allowed to anybody to just transfer their tokens to someone else", async () => {
+            const asAxel = token.connect(axel);
+            const asBen = token.connect(ben);
+            const asChantal = token.connect(chantal);
+
+            await expect(asAxel.transfer(chantal.address, 100)).to.be.revertedWith(
+                `ERC20SPV2: account ${axel.address.toLowerCase()} is not transferor`
+            );
+            await expect(asBen.transfer(chantal.address, 100)).to.be.revertedWith(
+                `ERC20SPV2: account ${ben.address.toLowerCase()} is not transferor`
+            );
+            await expect(asChantal.transfer(ben.address, 100)).to.be.revertedWith(
+                `ERC20SPV2: account ${chantal.address.toLowerCase()} is not transferor`
+            );
+        });
+
+        /*it('Transferor-Operator1 will be able to transfer shareholders tokens to other whitelisted accounts', async () => {
+            const asOperator1 = token.connect(operator1);
+            const asAxel = token.connect(axel);
+
+            await asAxel.increaseAllowance(operator1.address, 100);
+            await asOperator1.transferFrom(axel.address, ben.address, 100);
+        })*/
+    });
+});

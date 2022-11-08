@@ -4,6 +4,8 @@
 
 pragma solidity ^0.8.7;
 
+import "hardhat/console.sol";
+
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -41,27 +43,33 @@ contract Permissions55 is
 
     // **** Token Members ****
     mapping(uint256 => LibSet_address.set) private _tokenMembers;
-    mapping(uint256 => LibSet_uint256.set) private _customTokenSets;
-    mapping(uint256 => LibSet_uint256.set) private _customTokenSetsReversed;
 
     mapping(uint256 => string) private _tokenUris;
 
-    event CustomTokenSetAdded(uint256 indexed roleTokenId, uint256 indexed customTokenId);
-
     uint256 private _counter;
 
+    modifier onlyDeployer() {
+        require(
+            balanceOf(_msgSender(), TOKEN_ROLE_ADMIN) > 0 || balanceOf(_msgSender(), TOKEN_ROLE_DEPLOYER) > 0,
+            "Permission55: Admin or Deployer roles required"
+        );
+        _;
+    }
+
     modifier onlyMintingRole(uint256 id) {
-        (bool success, uint256 requiredPermission) = checkMintingPermissions(msg.sender, id);
+        (bool success, uint256 requiredPermission) = checkMintingPermissions(_msgSender(), id);
 
         if (!success) {
-            revert ErrMissingRole({account: msg.sender, roleId: id});
+            revert ErrMissingRole({account: _msgSender(), roleId: id});
         }
 
         _;
     }
 
-    modifier onlyAdmin() {
-        if (!isAdmin(_msgSender())) {
+    modifier onlyAdmin(uint256 tokenId) {
+        uint256 permissionSetId = tokenId / 1000;
+
+        if (!isAdmin(_msgSender(), permissionSetId)) {
             revert ErrAdminRoleRequired();
         }
 
@@ -81,23 +89,16 @@ contract Permissions55 is
         _counter++;
     }
 
-    function addPermissionSet(uint256 id, string calldata name) external onlyRole(TOKEN_ROLE_DEPLOYER) {
+    function addPermissionSet(uint256 id, string calldata name) external onlyDeployer {
         _addPermissionSet(id, name);
     }
 
-    function removePermissionSet(uint256 id) external onlyRole(TOKEN_ROLE_DEPLOYER) {
+    function removePermissionSet(uint256 id) external onlyDeployer {
         _removePermissionSet(id);
     }
 
-    function registerPermissionSet(string calldata name) external onlyRole(TOKEN_ROLE_DEPLOYER) {
+    function registerPermissionSet(string calldata name) external onlyDeployer {
         _registerPermissionSet(name);
-    }
-
-    function addCustomTokenSet(uint256 roleTokenId, uint256 customTokenId) external onlyRole(TOKEN_ROLE_DEPLOYER) {
-        _customTokenSets[roleTokenId].add(customTokenId);
-        _customTokenSetsReversed[customTokenId].add(roleTokenId);
-
-        emit CustomTokenSetAdded(roleTokenId, customTokenId);
     }
 
     function balanceOf(address account, uint256 id)
@@ -114,7 +115,7 @@ contract Permissions55 is
         return _tokenUris[id];
     }
 
-    function setTokenUri(uint256 id, string calldata tokenUri) external onlyAdmin {
+    function setTokenUri(uint256 id, string calldata tokenUri) external onlyAdmin(id) {
         _tokenUris[id] = tokenUri;
     }
 
@@ -208,60 +209,56 @@ contract Permissions55 is
         view
         returns (bool success, uint256 requiredPermission)
     {
-        if (isAdmin(account)) {
-            return (true, 0);
+        uint256 permissionSetId = tokenId / 1000;
+        uint256 roleId = tokenId % 1000;
+
+        if (isAdmin(account, permissionSetId)) {
+            return (true, TOKEN_ROLE_ADMIN);
         }
 
         // To be improved ...
         if (
-            tokenId == TOKEN_ROLE_ADMIN ||
-            tokenId == TOKEN_ROLE_DEPLOYER ||
-            tokenId == TOKEN_ROLE_WHITELIST_ADMIN ||
-            tokenId == TOKEN_ROLE_BLACKLIST_ADMIN
+            roleId == TOKEN_ROLE_ADMIN ||
+            roleId == TOKEN_ROLE_DEPLOYER ||
+            roleId == TOKEN_ROLE_OPERATOR ||
+            roleId == TOKEN_ROLE_MINTER ||
+            roleId == TOKEN_ROLE_TRANSFERER ||
+            roleId == TOKEN_ROLE_WHITELIST_ADMIN ||
+            roleId == TOKEN_ROLE_BLACKLIST_ADMIN
         ) {
-            return (balanceOf(account, TOKEN_ROLE_ADMIN) > 0, TOKEN_ROLE_ADMIN);
+            return (
+                balanceOf(account, TOKEN_ROLE_ADMIN) > 0 ||
+                    balanceOf(account, TOKEN_ROLE_ADMIN + 1000 * permissionSetId) > 0,
+                TOKEN_ROLE_ADMIN
+            );
         }
 
-        if (tokenId == TOKEN_ROLE_IS_WHITELISTED) {
-            return (_hasRole(TOKEN_ROLE_WHITELIST_ADMIN, account), TOKEN_ROLE_WHITELIST_ADMIN);
+        if (roleId == TOKEN_ROLE_IS_WHITELISTED) {
+            return (
+                balanceOf(account, TOKEN_ROLE_WHITELIST_ADMIN) > 0 ||
+                    balanceOf(account, TOKEN_ROLE_WHITELIST_ADMIN + 1000 * permissionSetId) > 0,
+                TOKEN_ROLE_WHITELIST_ADMIN
+            );
         }
 
-        if (tokenId == TOKEN_ROLE_IS_BLACKLISTED) {
-            return (balanceOf(account, TOKEN_ROLE_BLACKLIST_ADMIN) > 0, TOKEN_ROLE_BLACKLIST_ADMIN);
-        }
-
-        // check custom token set
-        for (uint256 i = 0; i < _customTokenSetsReversed[tokenId].length(); i++) {
-            uint256 customRoleId = _customTokenSetsReversed[tokenId].at(i + 1);
-            if (balanceOf(account, customRoleId) > 0) {
-                return (true, customRoleId);
-            }
+        if (roleId == TOKEN_ROLE_IS_BLACKLISTED) {
+            return (
+                balanceOf(account, TOKEN_ROLE_BLACKLIST_ADMIN) > 0 ||
+                    balanceOf(account, TOKEN_ROLE_BLACKLIST_ADMIN + 1000 * permissionSetId) > 0,
+                TOKEN_ROLE_BLACKLIST_ADMIN
+            );
         }
 
         return (false, 0);
     }
 
-    function isAdmin(address account) public view returns (bool) {
-        return balanceOf(account, TOKEN_ROLE_ADMIN) > 0;
+    function isAdmin(address account, uint256 permissionSetId) public view returns (bool) {
+        return
+            balanceOf(account, TOKEN_ROLE_ADMIN) > 0 ||
+            balanceOf(account, TOKEN_ROLE_ADMIN + permissionSetId * 1000) > 0;
     }
 
-    function isWhiteListAdmin(address account) public view returns (bool) {
-        return isAdmin(account) || balanceOf(account, TOKEN_ROLE_WHITELIST_ADMIN) > 0;
-    }
-
-    function isBlackListAdmin(address account) public view returns (bool) {
-        return isAdmin(account) || balanceOf(account, TOKEN_ROLE_BLACKLIST_ADMIN) > 0;
-    }
-
-    function isWhitelisted(address account) public view returns (bool) {
-        return balanceOf(account, TOKEN_ROLE_IS_WHITELISTED) > 0;
-    }
-
-    function isBlacklisted(address account) public view returns (bool) {
-        return balanceOf(account, TOKEN_ROLE_IS_BLACKLISTED) > 0;
-    }
-
-    function burnAs(address account, uint256 id) public onlyAdmin {
+    function burnAs(address account, uint256 id) public onlyAdmin(id) {
         _burn(account, id, balanceOf(account, id));
     }
 
@@ -322,21 +319,5 @@ contract Permissions55 is
 
         // transfer is not permitted.
         revert(ERROR_TRANSFER_IS_NOT_ALLOWED);
-    }
-
-    function _hasRole(uint256 roleTokenId, address account) internal view virtual override returns (bool) {
-        if (balanceOf(account, roleTokenId) > 0) {
-            return true;
-        }
-
-        // @TODO: Check this
-
-        for (uint256 i = 0; i < _customTokenSets[roleTokenId].length(); i++) {
-            if (balanceOf(account, _customTokenSets[roleTokenId].at(i + 1)) > 0) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

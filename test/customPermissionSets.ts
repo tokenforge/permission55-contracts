@@ -67,10 +67,33 @@ describe("Custom PermissionSet Overwriter tests", () => {
         ).to.be.false;
     });
 
+    it("should enable overwrite for IS_WHITELISTED if WHITELIST_ADMIN will be overwritten", async () => {
+        const {permissionsOverwriter, permissions} = await loadFixture(deployPermissionsAwareMock);
+
+        expect(await permissionsOverwriter.isRoleIdOverwritten(await permissions.TOKEN_ROLE_IS_WHITELISTED())).to.be.false;
+        
+        await permissionsOverwriter.setPermissionSetId(myCustomPermissionSetId);
+        await permissionsOverwriter.setRoleIdOverwrite(await permissions.TOKEN_ROLE_WHITELIST_ADMIN(), true);
+        
+        expect(await permissionsOverwriter.isRoleIdOverwritten(await permissions.TOKEN_ROLE_IS_WHITELISTED())).to.be.true;
+    })
+
+    it("should enable overwrite for IS_BLACKLISTED if BLACKLIST_ADMIN will be overwritten", async () => {
+        const {permissionsOverwriter, permissions} = await loadFixture(deployPermissionsAwareMock);
+
+        expect(await permissionsOverwriter.isRoleIdOverwritten(await permissions.TOKEN_ROLE_IS_BLACKLISTED())).to.be.false;
+
+        await permissionsOverwriter.setPermissionSetId(myCustomPermissionSetId);
+        await permissionsOverwriter.setRoleIdOverwrite(await permissions.TOKEN_ROLE_BLACKLIST_ADMIN(), true);
+
+        expect(await permissionsOverwriter.isRoleIdOverwritten(await permissions.TOKEN_ROLE_IS_BLACKLISTED())).to.be.true;
+    })
+
     it("should check the correct roles with overwritten roleIds", async () => {
         const { permissionsOverwriter, permissions, signers } = await loadFixture(deployPermissionsAwareMock);
 
         await permissionsOverwriter.setPermissionSetId(myCustomPermissionSetId);
+        await permissionsOverwriter.setRoleIdOverwrite(await permissions.TOKEN_ROLE_MINTER(), true);
 
         const roleIdMinter = (await permissions.TOKEN_ROLE_MINTER()).add(myCustomPermissionSetId * 1000);
         const transformedRoleId = await permissionsOverwriter.transformedRoleId(
@@ -81,6 +104,8 @@ describe("Custom PermissionSet Overwriter tests", () => {
         expect(roleIdMinter).to.eq(transformedRoleId);
 
         await permissions.createOrMint(signers.ben.address, roleIdMinter, "minter://");
+        
+        console.log(await permissions.balanceOf(signers.ben.address, roleIdMinter));
 
         expect(
             await permissionsOverwriter["hasRole(uint256,address)"](
