@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { Permissions55__factory } from "../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-type TestSigners = {
+export type TestSigners = {
     random: SignerWithAddress;
     axel: SignerWithAddress;
     ben: SignerWithAddress;
@@ -15,6 +15,8 @@ type TestSigners = {
 
     operator1: SignerWithAddress;
     operator2: SignerWithAddress;
+    
+    fraudster: SignerWithAddress;
 };
 
 export async function setupSigners() {
@@ -23,7 +25,7 @@ export async function setupSigners() {
 }
 
 export async function setupSignersEx(): Promise<TestSigners> {
-    const [deployer, axel, ben, chantal, minter1, minter2, operator1, operator2, random] = await ethers.getSigners();
+    const [deployer, axel, ben, chantal, minter1, minter2, operator1, operator2, random, fraudster] = await ethers.getSigners();
     return {
         deployer,
         axel,
@@ -34,6 +36,7 @@ export async function setupSignersEx(): Promise<TestSigners> {
         operator1,
         operator2,
         random,
+        fraudster
     };
 }
 

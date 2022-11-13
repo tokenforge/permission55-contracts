@@ -11,22 +11,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const token = await deployments.get("Permissions55");
     console.log("Permissions55-Address:", token.address);
 
-    return
     await execute(
         "Permissions55",
         { from: deployer, log: true },
-        "mint",
+        "createOrMint",
         "0xe18F1eF7290357d8687eC268BF66a903BF17Ef81",
-        1 //, 'ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q'
+        1 , 'ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q'
     );
 
-    /*await execute(
+    await execute(
         "Permissions55",
         { from: deployer, log: true },
         "createOrMint",
         "0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0",
         1, 'ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q'
-    );*/
+    );
 
     //await execute('Permissions55', {from: deployer, log: true}, 'create', '0xe18F1eF7290357d8687eC268BF66a903BF17Ef81', 2, '');
 
