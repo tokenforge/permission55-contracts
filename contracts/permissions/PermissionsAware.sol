@@ -2,8 +2,9 @@
 // (C) by TokenForge GmbH, Berlin
 // Author: Hagen Hübel, hagen@token-forge.io
 
-pragma solidity ^0.8.7;
+pragma solidity 0.8.16;
 
+import "hardhat/console.sol";
 import "../lib/solstruct/LibSet.uint256.sol";
 
 import "./PermissionRoles.sol";

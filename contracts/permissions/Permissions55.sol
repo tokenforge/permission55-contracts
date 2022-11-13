@@ -2,9 +2,7 @@
 // (C) by TokenForge GmbH, Berlin
 // Author: Hagen Hübel, hagen@token-forge.io
 
-pragma solidity ^0.8.7;
-
-import "hardhat/console.sol";
+pragma solidity 0.8.16;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";

@@ -2,7 +2,7 @@
 // (C) by TokenForge GmbH, Berlin
 // Author: Hagen Hübel, hagen@token-forge.io
 
-pragma solidity ^0.8.7;
+pragma solidity 0.8.16;
 
 import "../lib/solstruct/LibSet.uint256.sol";
 import "../lib/solstruct/LibSet.address.sol";

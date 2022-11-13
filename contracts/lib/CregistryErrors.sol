@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // (C) by TokenForge GmbH, Berlin
 // Author: Hagen Hübel, hagen@token-forge.io
-pragma solidity ^0.8.7;
+pragma solidity 0.8.16;
 
 interface CregistryErrors {
     /**

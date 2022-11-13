@@ -105,8 +105,6 @@ describe("Custom PermissionSet Overwriter tests", () => {
 
         await permissions.createOrMint(signers.ben.address, roleIdMinter, "minter://");
         
-        console.log(await permissions.balanceOf(signers.ben.address, roleIdMinter));
-
         expect(
             await permissionsOverwriter["hasRole(uint256,address)"](
                 await permissions.TOKEN_ROLE_MINTER(),
