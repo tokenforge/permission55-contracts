@@ -224,6 +224,7 @@ contract Permissions55 is
             roleId == TOKEN_ROLE_WHITELIST_ADMIN ||
             roleId == TOKEN_ROLE_BLACKLIST_ADMIN
         ) {
+            //slither-disable-next-line divide-before-multiply
             return (
                 balanceOf(account, TOKEN_ROLE_ADMIN) > 0 ||
                     balanceOf(account, TOKEN_ROLE_ADMIN + 1000 * permissionSetId) > 0,
@@ -232,6 +233,7 @@ contract Permissions55 is
         }
 
         if (roleId == TOKEN_ROLE_IS_WHITELISTED) {
+            //slither-disable-next-line divide-before-multiply
             return (
                 balanceOf(account, TOKEN_ROLE_WHITELIST_ADMIN) > 0 ||
                     balanceOf(account, TOKEN_ROLE_WHITELIST_ADMIN + 1000 * permissionSetId) > 0,
@@ -240,6 +242,7 @@ contract Permissions55 is
         }
 
         if (roleId == TOKEN_ROLE_IS_BLACKLISTED) {
+            //slither-disable-next-line divide-before-multiply
             return (
                 balanceOf(account, TOKEN_ROLE_BLACKLIST_ADMIN) > 0 ||
                     balanceOf(account, TOKEN_ROLE_BLACKLIST_ADMIN + 1000 * permissionSetId) > 0,

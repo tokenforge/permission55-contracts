@@ -40,6 +40,7 @@ contract PermissionSet {
 
     function _addPermissionSet(uint256 id, string calldata name) internal virtual {
         require(!_permissionSets.contains(id), "PermissionSet already exists with that ID");
+        //slither-disable-next-line unused-return
         _permissionSets.set(id, name);
 
         emit PermissionSetAdded(id, name);
@@ -47,6 +48,7 @@ contract PermissionSet {
 
     function _removePermissionSet(uint256 id) internal virtual {
         require(_permissionSets.contains(id), "PermissionSet is not existing");
+        //slither-disable-next-line unused-return
         _permissionSets.del(id);
 
         emit PermissionSetRemoved(id);
