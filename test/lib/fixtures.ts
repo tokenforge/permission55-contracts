@@ -13,19 +13,22 @@ export type TestSigners = {
     minter1: SignerWithAddress;
     minter2: SignerWithAddress;
 
+    whitelister: SignerWithAddress;
+    
     operator1: SignerWithAddress;
     operator2: SignerWithAddress;
     
     fraudster: SignerWithAddress;
+    
 };
 
 export async function setupSigners() {
-    const [deployer, axel, ben, chantal, minter1, minter2] = await ethers.getSigners();
-    return { deployer, axel, ben, chantal, minter1, minter2 };
+    const [deployer, axel, ben, chantal, minter1, minter2, whitelister, fraudster, unknown] = await ethers.getSigners();
+    return { deployer, axel, ben, chantal, minter1, minter2, whitelister, fraudster, unknown };
 }
 
 export async function setupSignersEx(): Promise<TestSigners> {
-    const [deployer, axel, ben, chantal, minter1, minter2, operator1, operator2, random, fraudster] = await ethers.getSigners();
+    const [deployer, axel, ben, chantal, minter1, minter2, operator1, operator2, whitelister, random, fraudster] = await ethers.getSigners();
     return {
         deployer,
         axel,
@@ -36,16 +39,17 @@ export async function setupSignersEx(): Promise<TestSigners> {
         operator1,
         operator2,
         random,
+        whitelister,
         fraudster
     };
 }
 
 export async function deployPermissions() {
-    const { deployer } = await setupSigners();
+    const signers = await setupSignersEx();
 
-    const permissionsFactory = (await ethers.getContractFactory("Permissions55", deployer)) as Permissions55__factory;
+    const permissionsFactory = (await ethers.getContractFactory("Permissions55", signers.deployer)) as Permissions55__factory;
     const permissions = await permissionsFactory.deploy("https://admin-token-uri");
     await permissions.deployed();
-
-    return { permissions };
+    
+    return { permissions, deployer: signers.deployer, signers };
 }

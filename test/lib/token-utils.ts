@@ -2,14 +2,20 @@ import { ContractReceipt, ContractTransaction, Event } from "@ethersproject/cont
 import { Result } from "@ethersproject/abi";
 
 export async function getTokenIdFromTransaction(transaction: Promise<ContractTransaction>): Promise<string> {
-    const receipt: ContractReceipt = await (await transaction).wait();
+    try {
+        const receipt: ContractReceipt = await (await transaction).wait();
 
-    const tokenId = getTokenIdFromTransferEvent(receipt);
-    if (tokenId) {
-        return tokenId;
+        const tokenId = getTokenIdFromTransferEvent(receipt);
+        if (tokenId) {
+            return tokenId;
+        }
+
+        return getTokenIdFromContractDeployedEvent(receipt);
     }
-
-    return getTokenIdFromContractDeployedEvent(receipt);
+    catch(e) {
+        console.log("EXC", e)
+        return "";
+    }
 }
 
 export function getTokenIdFromTransferEvent(receipt: ContractReceipt): string {

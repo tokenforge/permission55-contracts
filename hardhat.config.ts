@@ -39,7 +39,7 @@ const config: HardhatUserConfig = {
     },
 
     namedAccounts: {
-        deployer: 0,
+        deployer: 6,
         admin: 0,
         backend: 1,
     },
@@ -56,13 +56,6 @@ const config: HardhatUserConfig = {
             url: node_url("rinkeby"),
             accounts: accounts("rinkeby"),
         },
-
-        rinkeby: {
-            url: node_url("rinkeby"),
-            accounts: accounts("rinkeby"),
-            gas: 2100000,
-            gasPrice: 8000000000,
-        },
         mumbai: {
             url: node_url("polygon-mumbai"),
             accounts: accounts("mumbai"),
@@ -78,8 +71,6 @@ const config: HardhatUserConfig = {
         goerli: {
             url: node_url("goerli"),
             accounts: accounts("goerli"),
-            gas: 2100000,
-            gasPrice: 8000000000,
         },
         arbitrum_goerli: {
             url: node_url("ARBITRUM_GOERLI"),

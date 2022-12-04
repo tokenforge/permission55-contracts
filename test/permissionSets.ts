@@ -77,10 +77,14 @@ describe("PermissionSet", () => {
     it("permissions can be registered successfully with Auto-ID", async () => {
         const { permissionSet } = await loadFixture(deployPermissionSetMock);
 
+        await expect(await permissionSet.nextPermissionSetId()).to.eq(1);
+
         await expect(permissionSet.registerPermissionSet("CustomSet1"))
             .to.emit(permissionSet, "PermissionSetAdded")
             .withArgs(1, "CustomSet1");
 
+        await expect(await permissionSet.nextPermissionSetId()).to.eq(2);
+        
         expect(await permissionSet.permissionSet(1)).to.eq("CustomSet1");
 
         expect(await permissionSet.permissionSets()).to.eql([[BigNumber.from(1)], ["CustomSet1"]]);

@@ -18,6 +18,8 @@ contract PermissionSet {
     uint256 private _nextPermissionSetId = 1; // we start with 1 because 0 is default for Default Set
     LibMap_uint256_string.map private _permissionSets;
 
+    mapping(bytes32 => bool) private _existingNames;
+
     constructor() {}
 
     function permissionSet(uint256 id) external view returns (string memory) {
@@ -40,8 +42,17 @@ contract PermissionSet {
 
     function _addPermissionSet(uint256 id, string calldata name) internal virtual {
         require(!_permissionSets.contains(id), "PermissionSet already exists with that ID");
+
+        bytes32 hash = keccak256(abi.encodePacked(name));
+
+        if (_existingNames[hash] == true) {
+            revert("PermissionSet with that name already exists");
+        }
+
         //slither-disable-next-line unused-return
         _permissionSets.set(id, name);
+
+        _existingNames[hash] = true;
 
         emit PermissionSetAdded(id, name);
     }

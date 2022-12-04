@@ -32,17 +32,25 @@ describe("Custom PermissionSet", () => {
     it("permissions Overwriter has the write permission set id", async () => {
         const { permissionsOverwriter } = await loadFixture(deployPermissionsOverwriter);
 
-        expect(await permissionsOverwriter.getPermissionSetId()).to.eq(myDefaultCustomPermissionSetId);
+        await expect(await permissionsOverwriter.getPermissionSetId()).to.eq(myDefaultCustomPermissionSetId);
     });
 
     it("should emit PermissionSetIdChanged-Event upon changing PermissionSetID", async () => {
         const { permissionsOverwriter } = await loadFixture(deployPermissionsOverwriter);
 
-        expect(permissionsOverwriter.setPermissionSetId(myNewCustomPermissionSetId))
+        await expect(permissionsOverwriter.setPermissionSetId(myNewCustomPermissionSetId))
             .to.emit(permissionsOverwriter, "PermissionSetIdChanged")
             .withArgs(myDefaultCustomPermissionSetId, myNewCustomPermissionSetId);
     });
 
+    it("should revert with ErrPermissionSetIDWasAlreadySet-Event when no changes will happen", async () => {
+        const { permissionsOverwriter } = await loadFixture(deployPermissionsOverwriter);
+
+        await expect(permissionsOverwriter.setPermissionSetId(await permissionsOverwriter.getPermissionSetId()))
+            .to.be.revertedWithCustomError(permissionsOverwriter, "ErrPermissionSetIDWasAlreadySet")
+            .withArgs();
+    });
+    
     it("should emit PermissionSetIdChanged-Event upon changing PermissionSetID", async () => {
         const { permissions, permissionsOverwriter } = await loadFixture(deployPermissionsOverwriter);
 
@@ -53,4 +61,15 @@ describe("Custom PermissionSet", () => {
             .withArgs(await permissions.TOKEN_ROLE_IS_WHITELISTED(), true)
         ;
     });
+
+    it("should revert when non-admin will try to change permissions-set-id", async () => {
+        const signers = await setupSignersEx();
+        const { permissionsOverwriter } = await loadFixture(deployPermissionsOverwriter);
+
+        const asFraudster = permissionsOverwriter.connect(signers.fraudster);
+        await expect(asFraudster.setPermissionSetId(123))
+            .to.be.revertedWith(`AccessControl: account ${signers.fraudster.address.toLowerCase()} is missing role 0x01`)
+    });
+
+
 });

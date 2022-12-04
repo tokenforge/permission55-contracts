@@ -6,15 +6,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy, execute, read, log } = deployments;
 
     const { deployer } = await getNamedAccounts();
-    console.log("Mint Permission55 tokens using Deployer", deployer);
+    console.log("Mint GREBI_Permission55 tokens using Deployer", deployer);
 
-    const token = await deployments.get("Permissions55");
-    console.log("Permissions55-Address:", token.address);
+    const token = await deployments.get("GREBI_Permissions55");
+    console.log("GREBI_Permissions55-Address:", token.address);
 
-    let bal = await read("Permissions55", "balanceOf", "0xe18F1eF7290357d8687eC268BF66a903BF17Ef81", 1 )
+    let bal = await read("GREBI_Permissions55", "balanceOf", "0xe18F1eF7290357d8687eC268BF66a903BF17Ef81", 1 )
     if(bal.toNumber() == 0) {
         await execute(
-            "Permissions55",
+            "GREBI_Permissions55",
             {from: deployer, log: true},
             "createOrMint",
             "0xe18F1eF7290357d8687eC268BF66a903BF17Ef81",
@@ -22,24 +22,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         );
     }
 
-    bal = await read("Permissions55", "balanceOf", "0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0", 1 )
+    bal = await read("GREBI_Permissions55", "balanceOf", "0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0", 1 )
     if(bal.toNumber() == 0) {
         await execute(
-            "Permissions55",
+            "GREBI_Permissions55",
             {from: deployer, log: true},
             "createOrMint",
             "0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0",
             1, 'ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q'
         );
     }
-    //await execute('Permissions55', {from: deployer, log: true}, 'create', '0xe18F1eF7290357d8687eC268BF66a903BF17Ef81', 2, '');
-
-    //await execute('Permissions55', {from: deployer, log: true}, 'mint', '0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0', 2);
-    // await execute('Permissions55', {from: deployer, log: true}, 'create', '0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0', 2, '');
 
     log("Ready.");
 };
 export default func;
-func.dependencies = ["Permissions55"];
-func.tags = ["Permissions55Minting"];
+func.dependencies = ["GREBI_Permissions55"];
+func.tags = ["GREBI_Permissions55Minting"];
 func.runAtTheEnd = true;
