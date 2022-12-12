@@ -1,0 +1,20 @@
+{
+  "description": "Permissions for GeSAct-Studio, powered by TokenForge GmbH, Berlin, https://token-forge.io",
+  "external_url": "https://token-forge.io/",
+  "image": "ipfs://QmdtE4iRPPJVoQEABnDoxXomcvJZf4iNYKd5rZBkXvFRa6",
+  "name": "ADMIN_ROLE",
+  "attributes": [
+    {
+      "trait_type": "Role",
+      "value": "ADMIN_ROLE"
+    },
+    {
+      "trait_type": "Subject",
+      "value": "TokenForge GmbH"
+    },
+    {
+      "trait_type": "Transferable",
+      "value": "No"
+    }
+  ]
+}

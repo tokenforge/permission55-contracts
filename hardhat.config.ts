@@ -17,13 +17,9 @@ import { node_url, accounts, addForkConfiguration } from "./utils/network";
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
-const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET || "";
-
-const PRIVATE_KEY_RINKEBY =
-    process.env.PRIVATE_KEY_RINKEBY! || "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"; // well known private key
 
 const config: HardhatUserConfig = {
-    defaultNetwork: "hardhat",
+    // defaultNetwork: "tokenForge",
     solidity: {
         compilers: [
             {
@@ -39,7 +35,7 @@ const config: HardhatUserConfig = {
     },
 
     namedAccounts: {
-        deployer: 6,
+        deployer: 7,
         admin: 0,
         backend: 1,
     },
@@ -51,56 +47,68 @@ const config: HardhatUserConfig = {
         localhost: {
             url: node_url("localhost"),
             accounts: accounts(),
+            tags: ['dev', 'staging'],
         },
         staging: {
             url: node_url("rinkeby"),
             accounts: accounts("rinkeby"),
+            tags: ['dev', 'staging'],
         },
         mumbai: {
             url: node_url("polygon-mumbai"),
             accounts: accounts("mumbai"),
+            tags: ['dev', 'staging'],
         },
         matic: {
             url: node_url("polygon-matic"),
             accounts: accounts("matic"),
-        },
-        kovan: {
-            url: node_url("kovan"),
-            accounts: accounts("kovan"),
+            tags: ['prod'],
         },
         goerli: {
             url: node_url("goerli"),
             accounts: accounts("goerli"),
+            tags: ['dev', 'staging'],
+        },
+        tokenForge: {
+            url: 'http://127.0.0.1:9650/ext/bc/FyzyE8KVGptYbbhEQn6AvByjsUZhVD6U3huodN2ELYwKLofgR/rpc',
+            accounts: accounts("goerli"),
+            chainId: 44556,
+            tags: ['dev', 'staging'],
         },
         arbitrum_goerli: {
             url: node_url("ARBITRUM_GOERLI"),
             accounts: accounts("goerli"),
             gas: 2100000,
             gasPrice: 8000000000,
+            tags: ['dev', 'staging'],
         },
         optimism_goerli: {
             url: node_url("OPTIMISM_GOERLI"),
             accounts: accounts("goerli"),
             gas: 2100000,
             gasPrice: 8000000000,
+            tags: ['dev', 'staging'],
         },
         fuji: {
             url: "https://api.avax-test.network/ext/bc/C/rpc",
             gasPrice: 225000000000,
             chainId: 43113,
             accounts: accounts("fuji"),
+            tags: ['dev', 'staging'],
         },
         avalanche: {
             url: "https://api.avax.network/ext/bc/C/rpc",
             gasPrice: 225000000000,
             chainId: 43114,
             accounts: accounts("fuji"),
+            tags: ['prod'],
         },
         // Moonbase Alpha network specification (MoonBeam)
         moonbase: {
             url: "https://rpc.api.moonbase.moonbeam.network",
             chainId: 1287, // 0x507 in hex,
             accounts: accounts("moonbeam"),
+            tags: ['dev', 'staging'],
         },
     }),
     etherscan: {

@@ -1,4 +1,4 @@
-# E-Sec Token Contracts
+# Permissions55 Token Contracts
 
 ## Installation / Setup
 
@@ -57,7 +57,7 @@ Verification:
 ```
 
 ```
-npx hardhat verify --network rinkeby DEPLOYED_CONTRACT_ADDRESS 0xb66e545739be353c962c89db50e75ce20e289df2
+npx hardhat verify --network rinkeby DEPLOYED_CONTRACT_ADDRESS 0xb66e5...
 ```
 
 ## Work with smart contract

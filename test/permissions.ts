@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: UNLICENSED
+// (C) by TokenForge GmbH, Berlin
+// Author: Hagen Hübel, hagen@token-forge.io
+/**
+ * @dev Learn more about this on https://token-forge.io
+ 
+
+ _______    _              ______                   
+|__   __|  | |            |  ____|                  
+   | | ___ | | _____ _ __ | |__ ___  _ __ __ _  ___ 
+   | |/ _ \| |/ / _ \ '_ \|  __/ _ \| '__/ _` |/ _ \
+   | | (_) |   <  __/ | | | | | (_) | | | (_| |  __/
+   |_|\___/|_|\_\___|_| |_|_|  \___/|_|  \__, |\___|
+                                          __/ |     
+                                         |___/      
+
+ */
+
 import {ethers} from "hardhat";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -168,9 +186,10 @@ describe("Permissions55", () => {
             const {permissions} = await loadFixture(deployPermissions);
 
             const permissionsAsAxel = permissions.connect(axel);
-            await expect(permissionsAsAxel.registerPermissionSet("test")).to.be.revertedWith(
-                `Permission55: Admin or Deployer roles required`
-            );
+            await expect(permissionsAsAxel.registerPermissionSet("test"))
+                .to.be.revertedWithCustomError(permissions, 'ErrAdminOrDeployerRolesRequired')
+                .withArgs(axel.address)
+            ;
         });
 
         it("It wont be allowed to remove permission sets as non-deployer", async () => {
@@ -180,9 +199,10 @@ describe("Permissions55", () => {
             await permissions.registerPermissionSet("test");
 
             const permissionsAsAxel = permissions.connect(axel);
-            await expect(permissionsAsAxel.removePermissionSet(1)).to.be.revertedWith(
-                `Permission55: Admin or Deployer roles required`
-            );
+            await expect(permissionsAsAxel.removePermissionSet(1))
+                .to.be.revertedWithCustomError(permissions, 'ErrAdminOrDeployerRolesRequired')
+                .withArgs(axel.address)
+            ;
         });
 
         it("Will give me a list of specific Role-token holders", async () => {
@@ -334,7 +354,8 @@ describe("Permissions55", () => {
 
             // Second call
             await expect(permissions.mint(signers.axel.address, await permissions.TOKEN_ROLE_MINTER()))
-                .to.be.revertedWith('Permissions55: Token already minted')
+                .to.be.revertedWithCustomError(permissions, 'ErrTokenAlreadyExists')
+                .withArgs(signers.axel.address, await permissions.TOKEN_ROLE_MINTER())
             ;
         })
 
@@ -347,7 +368,8 @@ describe("Permissions55", () => {
 
             // Second call
             await expect(permissions.create(signers.axel.address, await permissions.TOKEN_ROLE_MINTER(), 'second://'))
-                .to.be.revertedWith('The token has already been created yet')
+                .to.be.revertedWithCustomError(permissions, 'ErrTokenAlreadyCreated')
+                .withArgs(await permissions.TOKEN_ROLE_MINTER())
             ;
         })
 
@@ -356,7 +378,8 @@ describe("Permissions55", () => {
             const {permissions} = await deployPermissions();
 
             await expect(permissions.mint(signers.axel.address, await permissions.TOKEN_ROLE_MINTER()))
-                .to.be.revertedWith('The token has not been created yet')
+                .to.be.revertedWithCustomError(permissions, 'ErrTokenNotCreatedYet')
+                .withArgs(await permissions.TOKEN_ROLE_MINTER())
             ;
         })
 
@@ -383,11 +406,13 @@ describe("Permissions55", () => {
             await expect(await permissions.balanceOf(signers.axel.address, 2)).to.eq(1);
 
             // Deployer is not allowed to transfer Axels token to Ben
-            await expect(permissions.safeTransferFrom(signers.axel.address, signers.ben.address, 2, 1, '0x')).to.be.revertedWith('ERC1155: caller is not token owner or approved');
+            await expect(permissions.safeTransferFrom(signers.axel.address, signers.ben.address, 2, 1, '0x'))
+                .to.be.revertedWith('ERC1155: caller is not token owner nor approved');
 
             // Axel is also not allowed to transfer its own tokens to Ben
             const axelAsSigner = permissions.connect(signers.axel);
-            await expect(axelAsSigner.safeTransferFrom(signers.axel.address, signers.ben.address, 2, 1, '0x')).to.be.revertedWith('Permissions55: Transfer is not allowed');
+            await expect(axelAsSigner.safeTransferFrom(signers.axel.address, signers.ben.address, 2, 1, '0x'))
+                .to.be.revertedWithCustomError(permissions, 'ErrTransferNotAllowed');
         })
 
         it('enumerates token members correctly', async () => {
@@ -618,7 +643,9 @@ describe("Permissions55", () => {
         it('can not remove an unregistered set', async () => {
             const {permissions} = await setupPermissionsLocally();
 
-            await expect(permissions.removePermissionSet(1)).to.be.revertedWith('PermissionSet is not existing')
+            await expect(permissions.removePermissionSet(1))
+                .to.be.revertedWithCustomError(permissions, 'ErrPermissionSetIsNotExisting')
+                .withArgs(1)
         })
 
         it('reverts when the same permission set will added twice', async () => {
@@ -626,7 +653,9 @@ describe("Permissions55", () => {
 
             await permissions.addPermissionSet(123, "Custom123")
 
-            await expect(permissions.addPermissionSet(123, "Custom123")).to.be.revertedWith('PermissionSet already exists with that ID')
+            await expect(permissions.addPermissionSet(123, "Custom123"))
+                .to.be.revertedWithCustomError(permissions, 'ErrPermissionSetAlreadyExists')
+                .withArgs(123)
         })
 
         it('reverts when the same permission set will registered twice', async () => {
@@ -634,7 +663,9 @@ describe("Permissions55", () => {
 
             await permissions.registerPermissionSet("Paris")
 
-            await expect(permissions.registerPermissionSet("Paris")).to.be.revertedWith('PermissionSet with that name already exists')
+            await expect(permissions.registerPermissionSet("Paris"))
+                .to.be.revertedWithCustomError(permissions, 'ErrPermissionSetWithSameNameAlreadyExists')
+                .withArgs('Paris')
         })
 
         it('allows Deployer-Role to add permissions', async () => {
@@ -654,7 +685,8 @@ describe("Permissions55", () => {
             const permissionsAsFraudster = permissions.connect(fraudster);
 
             await expect(permissionsAsFraudster.addPermissionSet(123, "Custom123"))
-                .to.be.revertedWith('Permission55: Admin or Deployer roles required')
+                .to.be.revertedWithCustomError(permissions, 'ErrAdminOrDeployerRolesRequired')
+                .withArgs(fraudster.address)
         })
     })
 
@@ -795,7 +827,8 @@ describe("Permissions55", () => {
             const {permissions} = await setupPermissionsLocally();
 
             await expect(permissions.mintOneBatch([axel.address], await permissions.TOKEN_ROLE_TRANSFERER()))
-                .to.be.revertedWith('The token has not been created yet')
+                .to.be.revertedWithCustomError(permissions, 'ErrTokenNotCreatedYet')
+                .withArgs(await permissions.TOKEN_ROLE_TRANSFERER())
         })
 
         it('reverts when batch-minting is happening from someone missing required permissions', async () => {
@@ -854,7 +887,8 @@ describe("Permissions55", () => {
             const {permissions} = await setupPermissionsLocally();
 
             await expect(permissions.mintBatch([axel.address], [await permissions.TOKEN_ROLE_TRANSFERER()]))
-                .to.be.revertedWith('Permission55: the token has not been created yet')
+                .to.be.revertedWithCustomError(permissions, 'ErrTokenNotCreatedYet')
+                .withArgs(await permissions.TOKEN_ROLE_TRANSFERER())
         })
 
         it('reverts when batch-minting with wrong argument-lengths will be passed', async () => {
@@ -862,7 +896,7 @@ describe("Permissions55", () => {
             const {permissions} = await setupPermissionsLocally();
 
             await expect(permissions.mintBatch([axel.address, ben.address], [await permissions.TOKEN_ROLE_IS_WHITELISTED()]))
-                .to.be.revertedWith('Permission55: parameters length mismatch')
+                .to.be.revertedWithCustomError(permissions, 'ErrParametersLengthMismatch')
         })
 
         it('reverts when batch-minting with wrong argument-lengths will be passed II', async () => {
@@ -870,7 +904,7 @@ describe("Permissions55", () => {
             const {permissions} = await setupPermissionsLocally();
 
             await expect(permissions.mintBatch([axel.address], [await permissions.TOKEN_ROLE_IS_WHITELISTED(), await permissions.TOKEN_ROLE_IS_WHITELISTED()]))
-                .to.be.revertedWith('Permission55: parameters length mismatch')
+                .to.be.revertedWithCustomError(permissions, 'ErrParametersLengthMismatch')
         })
 
         it('reverts when batch-minting through fraudster is happening on non-existing token-ids', async () => {
@@ -880,7 +914,8 @@ describe("Permissions55", () => {
             const asFraudster = permissions.connect(fraudster)
 
             await expect(asFraudster.mintBatch([axel.address], [await permissions.TOKEN_ROLE_IS_WHITELISTED()]))
-                .to.be.revertedWith('Permission55: the token has not been created yet')
+                .to.be.revertedWithCustomError(permissions, 'ErrTokenNotCreatedYet')
+                .withArgs(await permissions.TOKEN_ROLE_IS_WHITELISTED())
         })
 
         it('reverts when batch-minting is happening from someone missing required permissions', async () => {

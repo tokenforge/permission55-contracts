@@ -3,4 +3,6 @@
 
 yarn build
 yarn test
-yarn lint:sol:fix
+
+# Dont do linting as contracts will be then redeployed although no real code change was happening
+# yarn lint:sol:fix

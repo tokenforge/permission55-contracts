@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: UNLICENSED
+// (C) by TokenForge GmbH, Berlin
+// Author: Hagen Hübel, hagen@token-forge.io
+/**
+ * @dev Learn more about this on https://token-forge.io
+ 
+
+ _______    _              ______                   
+|__   __|  | |            |  ____|                  
+   | | ___ | | _____ _ __ | |__ ___  _ __ __ _  ___ 
+   | |/ _ \| |/ / _ \ '_ \|  __/ _ \| '__/ _` |/ _ \
+   | | (_) |   <  __/ | | | | | (_) | | | (_| |  __/
+   |_|\___/|_|\_\___|_| |_|_|  \___/|_|  \__, |\___|
+                                          __/ |     
+                                         |___/      
+
+ */
+
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { PermissionSetMock, PermissionSetMock__factory } from "../typechain";
@@ -30,7 +48,9 @@ describe("PermissionSet", () => {
 
     it("cant remove a permissionSet that does not exist yet", async () => {
         const { permissionSet } = await loadFixture(deployPermissionSetMock);
-        await expect(permissionSet.removePermissionSet(123)).to.be.rejectedWith("PermissionSet is not existing");
+        await expect(permissionSet.removePermissionSet(123))
+            .to.be.revertedWithCustomError(permissionSet, "ErrPermissionSetIsNotExisting")
+            .withArgs(123);
     });
 
     it("when no permissions exists at all...", async () => {

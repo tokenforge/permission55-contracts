@@ -1,10 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 // (C) by TokenForge GmbH, Berlin
 // Author: Hagen Hübel, hagen@token-forge.io
+/**
+ * @dev Learn more about this on https://token-forge.io
+ 
+
+ _______    _              ______                   
+|__   __|  | |            |  ____|                  
+   | | ___ | | _____ _ __ | |__ ___  _ __ __ _  ___ 
+   | |/ _ \| |/ / _ \ '_ \|  __/ _ \| '__/ _` |/ _ \
+   | | (_) |   <  __/ | | | | | (_) | | | (_| |  __/
+   |_|\___/|_|\_\___|_| |_|_|  \___/|_|  \__, |\___|
+                                          __/ |     
+                                         |___/      
+
+ */
 
 pragma solidity 0.8.16;
-
-import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -35,12 +47,6 @@ contract Permissions55 is
     using LibSet_address for LibSet_address.set;
     using LibMap_uint256_string for LibMap_uint256_string.map;
 
-    // **** Error messages *****
-
-    string public constant ERROR_TOKEN_ALREADY_EXISTS = "Permissions55: Token already minted";
-    string public constant ERROR_TRANSFER_IS_NOT_ALLOWED = "Permissions55: Transfer is not allowed";
-    string public constant ERROR_PERMISSION_DENIED = "Permissions55: not allowed due to missing permissions";
-
     // **** Events *****
     event TokenUriChanged(uint256 indexed tokenId, string oldValue, string newValue);
 
@@ -51,11 +57,14 @@ contract Permissions55 is
 
     uint256 private _counter;
 
+    // Contract name. Etherscan.io compatibility and OpenSea ("Unknown contract")
+    string public name;
+
     modifier onlyDeployer() {
-        require(
-            balanceOf(_msgSender(), TOKEN_ROLE_ADMIN) > 0 || balanceOf(_msgSender(), TOKEN_ROLE_DEPLOYER) > 0,
-            "Permission55: Admin or Deployer roles required"
-        );
+        if (balanceOf(_msgSender(), TOKEN_ROLE_ADMIN) == 0 && balanceOf(_msgSender(), TOKEN_ROLE_DEPLOYER) == 0) {
+            revert ErrAdminOrDeployerRolesRequired(_msgSender());
+        }
+
         _;
     }
 
@@ -80,7 +89,8 @@ contract Permissions55 is
     }
 
     // @TODO check base URI in Ctor.
-    constructor(string memory adminTokenUri) ERC1155("ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q") {
+    constructor(string memory adminTokenUri) ERC1155("ipfs://QmdTkLguthw5aofVxXY52EiKgAQQJDQv8mpBF6hk1Pf2Mg") {
+        name = "TokenForge-Permission55";
         _create(_msgSender(), TOKEN_ROLE_ADMIN, adminTokenUri);
     }
 
@@ -104,10 +114,13 @@ contract Permissions55 is
         _registerPermissionSet(name);
     }
 
-    function balanceOf(
-        address account,
-        uint256 id
-    ) public view virtual override(ERC1155, IPermissions55) returns (uint256) {
+    function balanceOf(address account, uint256 id)
+        public
+        view
+        virtual
+        override(ERC1155, IPermissions55)
+        returns (uint256)
+    {
         return super.balanceOf(account, id);
     }
 
@@ -122,19 +135,31 @@ contract Permissions55 is
         emit TokenUriChanged(id, oldUri, tokenUri);
     }
 
-    function create(address to, uint256 id, string memory tokenUri) public onlyMintingRole(id) {
-        require(!exists(id), "The token has already been created yet");
+    function create(
+        address to,
+        uint256 id,
+        string memory tokenUri
+    ) public onlyMintingRole(id) {
+        if (exists(id)) {
+            revert ErrTokenAlreadyCreated(id);
+        }
 
         _create(to, id, tokenUri);
     }
 
-    function _create(address to, uint256 id, string memory tokenUri) internal {
+    function _create(
+        address to,
+        uint256 id,
+        string memory tokenUri
+    ) internal {
         _tokenUris[id] = tokenUri;
         _mint(to, id);
     }
 
     function mint(address to, uint256 id) public onlyMintingRole(id) {
-        require(exists(id), "The token has not been created yet");
+        if (!exists(id)) {
+            revert ErrTokenNotCreatedYet(id);
+        }
 
         _mint(to, id);
     }
@@ -145,7 +170,9 @@ contract Permissions55 is
     }
 
     function mintOneBatch(address[] memory tos, uint256 id) public onlyMintingRole(id) {
-        require(exists(id), "The token has not been created yet");
+        if (!exists(id)) {
+            revert ErrTokenNotCreatedYet(id);
+        }
 
         for (uint256 i = 0; i < tos.length; i++) {
             _mint(tos[i], id);
@@ -153,13 +180,20 @@ contract Permissions55 is
     }
 
     function mintBatch(address[] memory tos, uint256[] memory ids) public {
-        require(ids.length == tos.length, "Permission55: parameters length mismatch");
+        if (ids.length != tos.length) {
+            revert ErrParametersLengthMismatch();
+        }
 
         // First check permissions and that all tokenIds already exists and minting is allowed
         for (uint256 i = 0; i < tos.length; i++) {
             // 1. then check if token was already created
-            // console.log("TOken %s", ids[i]);
-            require(exists(ids[i]), "Permission55: the token has not been created yet");
+            if (!exists(ids[i])) {
+                revert ErrTokenNotCreatedYet(ids[i]);
+            }
+
+            if (!exists(ids[i])) {
+                revert ErrTokenNotCreatedYet(ids[i]);
+            }
 
             // 2. is minting allowed
             (bool success, uint256 requiredPermission) = checkMintingPermissions(msg.sender, ids[i]);
@@ -174,7 +208,11 @@ contract Permissions55 is
         }
     }
 
-    function createOrMint(address to, uint256 id, string memory tokenUri) public onlyMintingRole(id) {
+    function createOrMint(
+        address to,
+        uint256 id,
+        string memory tokenUri
+    ) public onlyMintingRole(id) {
         if (!exists(id)) {
             _create(to, id, tokenUri);
         } else {
@@ -198,12 +236,11 @@ contract Permissions55 is
         return _tokenMembers[tokenId].length();
     }
 
-    function checkMintingPermissions(
-        address account,
-        uint256 tokenId
-    ) public view returns (bool success, uint256 requiredPermission) {
-        // console.log("checkMintingPermissions: %s -> %s", account, tokenId);
-
+    function checkMintingPermissions(address account, uint256 tokenId)
+        public
+        view
+        returns (bool success, uint256 requiredPermission)
+    {
         uint256 permissionSetId = tokenId / 1000;
         uint256 roleId = tokenId % 1000;
 
@@ -295,7 +332,7 @@ contract Permissions55 is
                 uint256 id = ids[i];
 
                 if (balanceOf(to, id) > 0) {
-                    revert(ERROR_TOKEN_ALREADY_EXISTS);
+                    revert ErrTokenAlreadyExists(to, id);
                 }
 
                 _tokenMembers[id].add(to);
@@ -316,6 +353,6 @@ contract Permissions55 is
         }
 
         // transfer is not permitted.
-        revert(ERROR_TRANSFER_IS_NOT_ALLOWED);
+        revert ErrTransferNotAllowed();
     }
 }

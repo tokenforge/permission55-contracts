@@ -1,5 +1,5 @@
 {
-  "name": "cregistry-contracts",
+  "name": "permission55-contracts",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -54,12 +54,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:tokenforge-gmbh/contracts/credistry-contracts.git"
+    "url": "git@github.com:tokenforge/permission55-contracts.git"
   },
   "author": "Hagen Hübel <hagen@token-forge.io>",
   "license": "(C) 2022 by TokenForge GmbH",
   "bugs": {
-    "url": "git@gitlab.com:tokenforge-gmbh/contracts/credistry-contracts.git"
+    "url": "git@github.com:tokenforge/permission55-contracts.git"
   },
   "homepage": "https://token-forge.io",
   "devDependencies": {

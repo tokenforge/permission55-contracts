@@ -1,45 +1,24 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {DeployFunction} from "hardhat-deploy/types";
+import {mintingRoles} from "../utils/deployUtils";
+
+const CONTRACT_NAME = "Permissions55";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const { deployments, getNamedAccounts } = hre;
-    const { deploy, execute, read, log } = deployments;
+    const {deployments, network, getNamedAccounts} = hre;
+    const {log} = deployments;
 
-    const { deployer } = await getNamedAccounts();
+    const {deployer} = await getNamedAccounts();
     console.log("Mint Permission55 tokens using Deployer", deployer);
 
-    const token = await deployments.get("Permissions55");
-    console.log("Permissions55-Address:", token.address);
+    const token = await deployments.get(CONTRACT_NAME);
+    console.log("Permissions55-Address: ", token.address);
 
-    let bal = await read("Permissions55", "balanceOf", "0xe18F1eF7290357d8687eC268BF66a903BF17Ef81", 1 )
-    if(bal.toNumber() == 0) {
-        await execute(
-            "Permissions55",
-            {from: deployer, log: true},
-            "createOrMint",
-            "0xe18F1eF7290357d8687eC268BF66a903BF17Ef81",
-            1, 'ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q'
-        );
-    }
-
-    bal = await read("Permissions55", "balanceOf", "0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0", 1 )
-    if(bal.toNumber() == 0) {
-        await execute(
-            "Permissions55",
-            {from: deployer, log: true},
-            "createOrMint",
-            "0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0",
-            1, 'ipfs://QmdQNC9ASzTCGwrRYqx4MfKWx1M7JAX4bq1x15nBM9Wc1Q'
-        );
-    }
-    //await execute('Permissions55', {from: deployer, log: true}, 'create', '0xe18F1eF7290357d8687eC268BF66a903BF17Ef81', 2, '');
-
-    //await execute('Permissions55', {from: deployer, log: true}, 'mint', '0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0', 2);
-    // await execute('Permissions55', {from: deployer, log: true}, 'create', '0xC1dAe5cE49FA879b8902F8991D33DE2Bf21605C0', 2, '');
+    await mintingRoles(hre, CONTRACT_NAME);
 
     log("Ready.");
 };
 export default func;
-func.dependencies = ["Permissions55"];
-func.tags = ["Permissions55Minting"];
+func.dependencies = [CONTRACT_NAME];
+func.tags = [CONTRACT_NAME + "Setup"];
 func.runAtTheEnd = true;
