@@ -87,23 +87,23 @@ contract PermissionSet is PermissionSetErrors {
 
     /// ---- Helper Functions -----
 
-    function _addPermissionSet(uint256 id, string calldata name) internal virtual {
+    function _addPermissionSet(uint256 id, string calldata name_) internal virtual {
         if (_permissionSets.contains(id)) {
             revert ErrPermissionSetAlreadyExists(id);
         }
 
-        bytes32 hash = keccak256(abi.encodePacked(name));
+        bytes32 hash = keccak256(abi.encodePacked(name_));
 
         if (_existingNames[hash] == true) {
-            revert ErrPermissionSetWithSameNameAlreadyExists(name);
+            revert ErrPermissionSetWithSameNameAlreadyExists(name_);
         }
 
         //slither-disable-next-line unused-return
-        _permissionSets.set(id, name);
+        _permissionSets.set(id, name_);
 
         _existingNames[hash] = true;
 
-        emit PermissionSetAdded(id, name);
+        emit PermissionSetAdded(id, name_);
     }
 
     function _removePermissionSet(uint256 id) internal virtual {
@@ -120,9 +120,9 @@ contract PermissionSet is PermissionSetErrors {
     /**
      * @dev Allows to register a new permission set by providing a name and generating an ID.
      */
-    function _registerPermissionSet(string calldata name) internal virtual {
+    function _registerPermissionSet(string calldata name_) internal virtual {
         uint256 id = _nextPermissionSetId;
-        _addPermissionSet(id, name);
+        _addPermissionSet(id, name_);
         unchecked {
             _nextPermissionSetId++;
         }

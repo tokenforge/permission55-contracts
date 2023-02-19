@@ -102,16 +102,16 @@ contract Permissions55 is
         _counter++;
     }
 
-    function addPermissionSet(uint256 id, string calldata name) external onlyDeployer {
-        _addPermissionSet(id, name);
+    function addPermissionSet(uint256 id, string calldata name_) external onlyDeployer {
+        _addPermissionSet(id, name_);
     }
 
     function removePermissionSet(uint256 id) external onlyDeployer {
         _removePermissionSet(id);
     }
 
-    function registerPermissionSet(string calldata name) external onlyDeployer {
-        _registerPermissionSet(name);
+    function registerPermissionSet(string calldata name_) external onlyDeployer {
+        _registerPermissionSet(name_);
     }
 
     function balanceOf(address account, uint256 id)
