@@ -18,9 +18,9 @@
 
 pragma solidity 0.8.16;
 
-interface PermissionErrors {
-    /// parameters length mismatch
-    error ErrParametersLengthMismatch();
+import "../lib/CregistryErrors.sol";
+
+interface PermissionErrors is CregistryErrors {
 
     /// Transfer is not allowed
     error ErrTransferNotAllowed();
